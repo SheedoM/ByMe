@@ -1,0 +1,138 @@
+import os
+from datetime import date
+from supabase import Client
+from fastapi import HTTPException
+from ..llm.factory import get_free_tier_provider, create_provider
+from ..prompts.post_generation import GENERATION_SYSTEM, GENERATION_USER
+from ..services.encryption import decrypt_key
+from ..config import FREE_TIER_MONTHLY_LIMIT, ENCRYPTION_KEY
+
+
+def _format_list(items: list) -> str:
+    if not items:
+        return "not specified"
+    return " | ".join(f'"{item}"' for item in items)
+
+
+async def generate_post(
+    db: Client,
+    user_id: str,
+    topic: str,
+    key_points: list[str],
+) -> dict:
+    """
+    Generates a LinkedIn post for the user.
+
+    Flow:
+    1. Fetch style profile (must be ready)
+    2. Fetch user settings (plan_type + BYOK config)
+    3. Enforce monthly limit for free tier
+    4. Select the correct LLM provider
+    5. Build + send prompts
+    6. Store result in history
+    7. Return generated post
+    """
+
+    # 1. Fetch style profile
+    result = db.table("style_profiles") \
+               .select("*") \
+               .eq("user_id", user_id) \
+               .single() \
+               .execute()
+
+    if not result.data:
+        raise HTTPException(status_code=400, detail="No style profile found. Complete onboarding first.")
+
+    profile = result.data
+    if profile.get("status") != "ready":
+        raise HTTPException(status_code=400, detail="Style profile is not ready yet.")
+
+    # 2. Fetch user settings
+    settings_result = db.table("user_settings") \
+                        .select("*") \
+                        .eq("user_id", user_id) \
+                        .maybe_single() \
+                        .execute()
+
+    settings = settings_result.data or {}
+    plan_type = settings.get("plan_type", "free")
+
+    # 3. Rate limit enforcement for free tier
+    if plan_type == "free":
+        month_start = date.today().replace(day=1)
+        count_result = db.table("generated_posts") \
+                         .select("id", count="exact") \
+                         .eq("user_id", user_id) \
+                         .gte("created_at", f"{month_start}T00:00:00Z") \
+                         .execute()
+
+        if (count_result.count or 0) >= FREE_TIER_MONTHLY_LIMIT:
+            raise HTTPException(
+                status_code=429,
+                detail=(
+                    f"You've reached the free tier limit of {FREE_TIER_MONTHLY_LIMIT} posts/month. "
+                    "Add your own API key in Settings to generate unlimited posts."
+                )
+            )
+
+    # 4. Select provider
+    if plan_type == "free":
+        provider = get_free_tier_provider()
+    else:
+        encrypted_key = settings.get("byok_api_key_encrypted")
+        if not encrypted_key or not ENCRYPTION_KEY:
+            raise HTTPException(status_code=400, detail="BYOK API key not configured. Go to Settings.")
+        api_key      = decrypt_key(encrypted_key, ENCRYPTION_KEY)
+        byok_provider = settings.get("byok_provider", "gemini")
+        byok_model    = settings.get("byok_model")
+        provider      = create_provider(byok_provider, api_key, byok_model)
+
+    # 5. Build prompts
+    system = GENERATION_SYSTEM.format(
+        tone=                profile.get("tone", "not specified"),
+        formality_level=     profile.get("formality_level", 5),
+        avg_post_length=     profile.get("avg_post_length", 150),
+        opening_patterns=    _format_list(profile.get("opening_patterns", [])),
+        closing_patterns=    _format_list(profile.get("closing_patterns", [])),
+        emoji_usage=         profile.get("emoji_usage", "none"),
+        structure_preference=profile.get("structure_preference", "prose"),
+        paragraph_length=    profile.get("paragraph_length", "short"),
+        storytelling_style=  profile.get("storytelling_style", "not specified"),
+        vocabulary_notes=    profile.get("vocabulary_notes", "not specified"),
+        raw_summary=         profile.get("raw_summary", "not specified"),
+    )
+
+    key_points_str = "\n".join(f"- {point}" for point in key_points)
+    user_prompt = GENERATION_USER.format(topic=topic, key_points=key_points_str)
+
+    # 6. Call LLM
+    try:
+        response = await provider.generate(
+            system_prompt=system,
+            user_prompt=user_prompt,
+            temperature=0.8
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=502,
+            detail="The AI provider returned an error. Please check your API key in Settings."
+        )
+
+    # 7. Store in history
+    db.table("generated_posts").insert({
+        "user_id":       user_id,
+        "topic":         topic,
+        "key_points":    "\n".join(key_points),
+        "provider_used": response.provider,
+        "model_used":    response.model,
+        "plan_type":     plan_type,
+        "output":        response.content,
+        "tokens_used":   response.tokens_used,
+    }).execute()
+
+    return {
+        "output":    response.content,
+        "provider":  response.provider,
+        "model":     response.model,
+        "plan_type": plan_type,
+    }
