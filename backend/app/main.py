@@ -10,7 +10,8 @@ app = FastAPI(title="ByMe API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(","),
+    # Allow Vite default (5173) and the project's dev server (3005) by default
+    allow_origins=os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3005").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
