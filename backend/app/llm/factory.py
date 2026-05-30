@@ -35,10 +35,10 @@ def get_free_tier_provider() -> BaseLLMProvider:
     if not OPENROUTER_API_KEY:
         raise RuntimeError("OPENROUTER_API_KEY is not set. Cannot serve free tier users.")
 
-    # Using a 100% free model from OpenRouter
+    # Using a free model via OpenRouter (use a stable OpenRouter model id)
     return OpenAIProvider(
         api_key=OPENROUTER_API_KEY,
-        model="google/gemini-2.0-flash-lite-preview-02-05:free",
+        model="gpt-4o-mini",
         base_url="https://openrouter.ai/api/v1"
     )
 

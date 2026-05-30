@@ -42,7 +42,7 @@ async def generate_hooks(
                         .maybe_single() \
                         .execute()
 
-    settings = settings_result.data or {}
+    settings = getattr(settings_result, 'data', None) or {}
     plan_type = settings.get("plan_type", "free")
 
     if plan_type == "free":
