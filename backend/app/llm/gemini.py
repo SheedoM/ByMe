@@ -1,5 +1,6 @@
 from google import genai
 from .base import BaseLLMProvider, LLMResponse
+import os
 
 
 class GeminiProvider(BaseLLMProvider):
@@ -8,8 +9,12 @@ class GeminiProvider(BaseLLMProvider):
     and compatible with Python 3.14+ (no protobuf C extensions).
     """
 
-    def __init__(self, api_key: str, model: str | None = None):
-        self._client     = genai.Client(api_key=api_key)
+    def __init__(self, api_key: str | None = None, model: str | None = None):
+        # Allow falling back to environment variable when api_key is not provided
+        key = api_key or os.getenv("GOOGLE_API_KEY")
+        if not key:
+            raise ValueError("Gemini requires an API key. Set GOOGLE_API_KEY or pass api_key.")
+        self._client = genai.Client(api_key=key)
         self._model_name = model or "gemini-1.5-flash"
 
     async def generate(

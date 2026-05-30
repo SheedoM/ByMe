@@ -41,7 +41,7 @@ async def upload_posts(
     }, on_conflict="user_id").execute()
 
     # Run style extraction in background (always with platform Gemini Flash)
-    background_tasks.add_task(extract_and_store_style, db, user_id, posts)
+    background_tasks.add_task(extract_and_store_style, user_id, posts)
 
     return {"status": "processing", "posts_found": len(posts)}
 

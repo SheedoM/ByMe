@@ -1,4 +1,4 @@
-import os
+from ..config import OPENROUTER_API_KEY
 from .base import BaseLLMProvider
 from .claude import ClaudeProvider
 from .openai_provider import OpenAIProvider
@@ -32,14 +32,13 @@ def get_free_tier_provider() -> BaseLLMProvider:
     """
     Returns an OpenRouter provider using completely free models.
     """
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    if not api_key:
+    if not OPENROUTER_API_KEY:
         raise RuntimeError("OPENROUTER_API_KEY is not set. Cannot serve free tier users.")
-    
+
     # Using a 100% free model from OpenRouter
     return OpenAIProvider(
-        api_key=api_key, 
-        model="google/gemini-2.0-flash-lite-preview-02-05:free", 
+        api_key=OPENROUTER_API_KEY,
+        model="google/gemini-2.0-flash-lite-preview-02-05:free",
         base_url="https://openrouter.ai/api/v1"
     )
 

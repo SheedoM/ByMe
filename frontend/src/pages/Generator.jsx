@@ -12,7 +12,10 @@ export default function Generator() {
   const {
     topic, setTopic,
     keyPoints, setKeyPoints,
+    postType, setPostType,
+    selectedHook, setSelectedHook,
     output, setOutput,
+    postId,
     loading, error,
     generate,
   } = useGenerator()
@@ -47,8 +50,8 @@ export default function Generator() {
               Tell us what to write about. We&apos;ll write it in your voice.
             </p>
           </div>
-          <div className="flex flex-col items-start sm:items-end gap-2">
-            <ModelSelector />
+            <div className="flex flex-col items-start sm:items-end gap-2">
+            <ModelSelector settings={providerInfo} />
             {usage && providerInfo?.plan_type === 'free' && (
               <p className="text-xs text-muted">
                 {usage.used} / {usage.limit} posts this month
@@ -68,6 +71,10 @@ export default function Generator() {
               setTopic={setTopic}
               keyPoints={keyPoints}
               setKeyPoints={setKeyPoints}
+              postType={postType}
+              setPostType={setPostType}
+              selectedHook={selectedHook}
+              setSelectedHook={setSelectedHook}
               onGenerate={handleGenerate}
               loading={loading}
               error={error}
@@ -82,6 +89,7 @@ export default function Generator() {
               output={output}
               loading={loading}
               providerInfo={providerInfo}
+              postId={postId}
             />
           </div>
         </div>

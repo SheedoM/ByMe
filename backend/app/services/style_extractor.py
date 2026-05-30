@@ -40,18 +40,20 @@ async def extract_style(posts: List[dict]) -> dict:
 
 
 async def extract_and_store_style(
-    db: Client,
     user_id: str,
     posts: List[dict]
 ) -> None:
     """
-    Background task: extract style and write to style_profiles table.
-    Called by the upload endpoint as a BackgroundTask.
+    Background task — creates its own DB client and writes the style profile.
+    This avoids passing a request-scoped client into a long-running background task.
     """
+    from ..config import get_supabase
+
+    db = get_supabase()
     try:
         profile_data = await extract_style(posts)
-        profile_data["user_id"]        = user_id
-        profile_data["status"]         = "ready"
+        profile_data["user_id"] = user_id
+        profile_data["status"] = "ready"
         profile_data["posts_analyzed"] = len(posts)
 
         db.table("style_profiles").upsert(profile_data, on_conflict="user_id").execute()

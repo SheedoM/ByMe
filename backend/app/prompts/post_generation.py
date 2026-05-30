@@ -17,6 +17,10 @@ Paragraph length: {paragraph_length}
 Storytelling style: {storytelling_style}
 Vocabulary notes: {vocabulary_notes}
 Overall voice: {raw_summary}
+# POST TYPE INSTRUCTION:
+{post_type_constraint}
+
+{hook_constraint}
 
 CRITICAL RULES:
 1. Match the formality level exactly. Do not write more formally or casually.
@@ -39,3 +43,32 @@ Topic: {topic}
 Key points to include:
 {key_points}
 """
+
+
+POST_TYPE_CONSTRAINTS = {
+	"story": (
+		"STRUCTURE: Open with a specific moment, scene, or personal experience. "
+		"Use the story to earn the right to make the key points. "
+		"The insight comes from the lived experience — not as an abstract lesson."
+	),
+	"hot_take": (
+		"STRUCTURE: Open with a bold, contrarian, or provocative statement. "
+		"This post takes a clear position that not everyone will agree with. "
+		"Use the key points to defend the take, not soften it."
+	),
+	"lesson": (
+		"STRUCTURE: Lead with the insight or takeaway. "
+		"Then explain how you arrived at it — the experience, the mistake, or the realization. "
+		"This post teaches first, then shows why you know it."
+	),
+	"observation": (
+		"STRUCTURE: Open with something you have been noticing, seeing, or thinking about lately. "
+		"Connect the observation to a broader idea or question. "
+		"This post invites the reader to see something differently."
+	),
+	"update": (
+		"STRUCTURE: Share a personal or professional development — a milestone, a new direction, "
+		"or a reflection on something that just happened. "
+		"Keep it grounded and human. Do not oversell the achievement."
+	),
+}

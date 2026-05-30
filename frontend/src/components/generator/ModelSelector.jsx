@@ -1,23 +1,13 @@
-import { useEffect, useState } from 'react'
-import { getProviderSettings } from '../../services/userSettings'
 import { Link } from 'react-router-dom'
 import Badge from '../ui/Badge'
 
-export default function ModelSelector() {
-  const [settings, setSettings] = useState(null)
-
-  useEffect(() => {
-    getProviderSettings()
-      .then(({ data }) => setSettings(data))
-      .catch(() => {})
-  }, [])
-
+export default function ModelSelector({ settings }) {
   if (!settings) return null
 
   if (settings.plan_type === 'free' || !settings.byok_provider) {
     return (
       <div className="flex items-center gap-2">
-        <Badge variant="amber">⚡ ByMe Free · Gemini Flash</Badge>
+        <Badge variant="amber">⚡ ByMe Free · Powered by Gemini</Badge>
         <Link
           to="/settings"
           className="text-xs text-muted underline underline-offset-2 hover:text-ink transition-colors"

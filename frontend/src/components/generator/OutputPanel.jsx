@@ -2,9 +2,12 @@ import { useState } from 'react'
 import { copyToClipboard } from '../../utils/format'
 import Button from '../ui/Button'
 import Spinner from '../ui/Spinner'
+import { submitFeedback } from '../../services/generate'
 
-export default function OutputPanel({ output, loading, providerInfo }) {
+export default function OutputPanel({ output, loading, providerInfo, postId }) {
   const [copied, setCopied] = useState(false)
+  const [feedback, setFeedback] = useState(null)
+  const [fbSaving, setFbSaving] = useState(false)
 
   const handleCopy = async () => {
     const ok = await copyToClipboard(output)
@@ -39,6 +42,19 @@ export default function OutputPanel({ output, loading, providerInfo }) {
     )
   }
 
+  const handleFeedback = async (rating) => {
+    if (!postId || feedback) return
+    setFbSaving(true)
+    try {
+      await submitFeedback(postId, rating)
+      setFeedback(rating)
+    } catch {
+      // fail silently — feedback is non-critical
+    } finally {
+      setFbSaving(false)
+    }
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Post output */}
@@ -51,7 +67,7 @@ export default function OutputPanel({ output, loading, providerInfo }) {
         {providerInfo && (
           <span className="text-xs text-muted">
             {providerInfo.plan_type === 'free'
-              ? '⚡ ByMe Free · Gemini Flash'
+              ? '⚡ ByMe Free · Powered by Gemini'
               : `🔑 ${providerInfo.provider} · ${providerInfo.model}`}
           </span>
         )}
@@ -65,6 +81,38 @@ export default function OutputPanel({ output, loading, providerInfo }) {
           {copied ? '✓ Copied' : 'Copy'}
         </Button>
       </div>
+
+      {/* Feedback row — only shown after generation, disappears after rating */}
+      {output && postId && !feedback && (
+        <div className="mt-4 pt-4 border-t border-border">
+          <p className="text-xs text-muted mb-2">Was this in your voice?</p>
+          <div className="flex gap-2">
+            {[
+              { id: 'nailed_it', label: '✓ Nailed it' },
+              { id: 'almost',    label: '~ Almost'    },
+              { id: 'not_quite', label: '✗ Not quite' },
+            ].map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => handleFeedback(id)}
+                disabled={fbSaving}
+                className="text-xs px-3 py-1.5 rounded-full border border-border
+                           text-muted hover:border-muted hover:text-ink
+                           transition-all disabled:opacity-40"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Thank-you state after feedback submitted */}
+      {feedback && (
+        <p className="mt-4 pt-4 border-t border-border text-xs text-muted">
+          Thanks — your feedback helps ByMe learn your voice.
+        </p>
+      )}
     </div>
   )
 }

@@ -3,7 +3,7 @@ from datetime import date
 from supabase import Client
 from fastapi import HTTPException
 from ..llm.factory import get_free_tier_provider, create_provider
-from ..prompts.post_generation import GENERATION_SYSTEM, GENERATION_USER
+from ..prompts.post_generation import GENERATION_SYSTEM, GENERATION_USER, POST_TYPE_CONSTRAINTS
 from ..services.encryption import decrypt_key
 from ..config import FREE_TIER_MONTHLY_LIMIT, ENCRYPTION_KEY
 
@@ -19,6 +19,8 @@ async def generate_post(
     user_id: str,
     topic: str,
     key_points: list[str],
+    post_type: str = "story",
+    selected_hook: str | None = None,
 ) -> dict:
     """
     Generates a LinkedIn post for the user.
@@ -88,6 +90,20 @@ async def generate_post(
         provider      = create_provider(byok_provider, api_key, byok_model)
 
     # 5. Build prompts
+    # Build post type and hook constraints
+    post_type_constraint = POST_TYPE_CONSTRAINTS.get(
+        post_type,
+        POST_TYPE_CONSTRAINTS["story"]
+    )
+
+    hook_constraint = ""
+    if selected_hook:
+        hook_constraint = (
+            f"HOOK CONSTRAINT: You MUST begin this post with the following opening line exactly as written:\n"
+            f'"{selected_hook}"\n'
+            f"Do not alter it. Continue the post naturally from there."
+        )
+
     system = GENERATION_SYSTEM.format(
         tone=                profile.get("tone", "not specified"),
         formality_level=     profile.get("formality_level", 5),
@@ -100,6 +116,8 @@ async def generate_post(
         storytelling_style=  profile.get("storytelling_style", "not specified"),
         vocabulary_notes=    profile.get("vocabulary_notes", "not specified"),
         raw_summary=         profile.get("raw_summary", "not specified"),
+        post_type_constraint=post_type_constraint,
+        hook_constraint=hook_constraint,
     )
 
     key_points_str = "\n".join(f"- {point}" for point in key_points)
@@ -118,8 +136,8 @@ async def generate_post(
             detail="The AI provider returned an error. Please check your API key in Settings."
         )
 
-    # 7. Store in history
-    db.table("generated_posts").insert({
+    # 7. Store in history and return the generated id
+    insert_result = db.table("generated_posts").insert({
         "user_id":       user_id,
         "topic":         topic,
         "key_points":    "\n".join(key_points),
@@ -128,9 +146,18 @@ async def generate_post(
         "plan_type":     plan_type,
         "output":        response.content,
         "tokens_used":   response.tokens_used,
+        "post_type":     post_type,
+        "selected_hook": selected_hook,
     }).execute()
 
+    generated_id = None
+    try:
+        generated_id = insert_result.data[0]["id"] if insert_result.data else None
+    except Exception:
+        generated_id = None
+
     return {
+        "id":        generated_id,
         "output":    response.content,
         "provider":  response.provider,
         "model":     response.model,
