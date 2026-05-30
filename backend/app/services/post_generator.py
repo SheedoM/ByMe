@@ -41,6 +41,7 @@ async def generate_post(
                .eq("user_id", user_id) \
                .single() \
                .execute()
+    
 
     if not result.data:
         raise HTTPException(status_code=400, detail="No style profile found. Complete onboarding first.")
@@ -55,8 +56,9 @@ async def generate_post(
                         .eq("user_id", user_id) \
                         .maybe_single() \
                         .execute()
+    
 
-    settings = settings_result.data or {}
+    settings = getattr(settings_result, 'data', None) or {}
     plan_type = settings.get("plan_type", "free")
 
     # 3. Rate limit enforcement for free tier
@@ -68,7 +70,7 @@ async def generate_post(
                          .gte("created_at", f"{month_start}T00:00:00Z") \
                          .execute()
 
-        if (count_result.count or 0) >= FREE_TIER_MONTHLY_LIMIT:
+        if (getattr(count_result, 'count', 0) or 0) >= FREE_TIER_MONTHLY_LIMIT:
             raise HTTPException(
                 status_code=429,
                 detail=(
