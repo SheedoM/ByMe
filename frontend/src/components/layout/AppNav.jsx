@@ -1,16 +1,18 @@
 import { Link, useLocation } from 'react-router-dom'
 import { signOut } from '../../services/auth'
 import { useAuth } from '../../context/AuthContext'
-
-const navLinks = [
-  { to: '/app',     label: 'Generate' },
-  { to: '/profile', label: 'My Style' },
-  { to: '/settings', label: 'Settings' },
-]
+import { useLanguage } from '../../i18n'
+import LanguageToggle from '../ui/LanguageToggle'
 
 export default function AppNav() {
   const { pathname } = useLocation()
   const { user } = useAuth()
+  const { t } = useLanguage()
+  const navLinks = [
+    { to: '/app',     label: t('navGenerate') },
+    { to: '/profile', label: t('navProfile') },
+    { to: '/settings', label: t('navSettings') },
+  ]
 
   return (
     <nav className="sticky top-0 z-30 bg-paper/90 backdrop-blur border-b border-border">
@@ -40,6 +42,7 @@ export default function AppNav() {
 
         {/* User + sign out */}
         <div className="flex items-center gap-3">
+          <LanguageToggle compact />
           <span className="text-xs text-muted hidden sm:block truncate max-w-[140px]">
             {user?.email}
           </span>
@@ -47,7 +50,7 @@ export default function AppNav() {
             onClick={() => signOut().then(() => window.location.href = '/login')}
             className="text-xs text-muted hover:text-ink transition-colors border border-border rounded-lg px-3 py-1.5"
           >
-            Sign out
+            {t('navSignOut')}
           </button>
         </div>
       </div>

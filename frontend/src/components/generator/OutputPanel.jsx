@@ -3,8 +3,10 @@ import { copyToClipboard } from '../../utils/format'
 import Button from '../ui/Button'
 import Spinner from '../ui/Spinner'
 import { submitFeedback } from '../../services/generate'
+import { useLanguage } from '../../i18n'
 
 export default function OutputPanel({ output, loading, providerInfo, postId }) {
+  const { t } = useLanguage()
   const [copied, setCopied] = useState(false)
   const [feedback, setFeedback] = useState(null)
   const [fbSaving, setFbSaving] = useState(false)
@@ -21,7 +23,7 @@ export default function OutputPanel({ output, loading, providerInfo, postId }) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-4">
         <Spinner size="lg" />
-        <p className="text-sm text-muted animate-pulse">Writing in your voice…</p>
+        <p className="text-sm text-muted animate-pulse">{t('writingVoice')}</p>
       </div>
     )
   }
@@ -33,10 +35,10 @@ export default function OutputPanel({ output, loading, providerInfo, postId }) {
           ✍
         </div>
         <p className="text-sm text-muted">
-          Your post will appear here.
+          {t('postWillAppear')}
         </p>
         <p className="text-xs text-muted/60">
-          Fill in the topic and key points, then hit &ldquo;Write my post&rdquo;.
+          {t('fillTopic')}
         </p>
       </div>
     )
@@ -78,25 +80,26 @@ export default function OutputPanel({ output, loading, providerInfo, postId }) {
           onClick={handleCopy}
           className="ml-auto"
         >
-          {copied ? '✓ Copied' : 'Copy'}
+          {copied ? `✓ ${t('copied')}` : t('copy')}
         </Button>
       </div>
 
       {/* Feedback row — only shown after generation, disappears after rating */}
       {output && postId && !feedback && (
         <div className="mt-4 pt-4 border-t border-border">
-          <p className="text-xs text-muted mb-2">Was this in your voice?</p>
-          <div className="flex gap-2">
+          <p className="text-xs text-muted mb-2">{t('feedbackQuestion')}</p>
+          <div className="flex flex-wrap gap-2">
             {[
-              { id: 'nailed_it', label: '✓ Nailed it' },
-              { id: 'almost',    label: '~ Almost'    },
-              { id: 'not_quite', label: '✗ Not quite' },
+              { id: 'nailed_it', label: `✓ ${t('nailedIt')}` },
+              { id: 'almost',    label: `~ ${t('almost')}`    },
+              { id: 'not_quite', label: `✗ ${t('notQuite')}` },
             ].map(({ id, label }) => (
               <button
                 key={id}
                 onClick={() => handleFeedback(id)}
                 disabled={fbSaving}
                 className="text-xs px-3 py-1.5 rounded-full border border-border
+                           min-w-[6.25rem] whitespace-nowrap text-center
                            text-muted hover:border-muted hover:text-ink
                            transition-all disabled:opacity-40"
               >
@@ -110,7 +113,7 @@ export default function OutputPanel({ output, loading, providerInfo, postId }) {
       {/* Thank-you state after feedback submitted */}
       {feedback && (
         <p className="mt-4 pt-4 border-t border-border text-xs text-muted">
-          Thanks — your feedback helps ByMe learn your voice.
+          {t('feedbackThanks')}
         </p>
       )}
     </div>

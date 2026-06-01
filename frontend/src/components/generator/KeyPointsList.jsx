@@ -1,4 +1,7 @@
+import { useLanguage } from '../../i18n'
+
 export default function KeyPointsList({ points, onChange }) {
+  const { t } = useLanguage()
   const update = (i, val) => {
     const next = [...points]
     next[i] = val
@@ -16,7 +19,7 @@ export default function KeyPointsList({ points, onChange }) {
             id={`key-point-${i}`}
             value={point}
             onChange={(e) => update(i, e.target.value)}
-            placeholder={`Key point ${i + 1}`}
+            placeholder={t('keyPointPlaceholder', { number: i + 1 })}
             className="flex-1 bg-paper border border-border rounded-xl px-3 py-2 text-sm text-ink
               placeholder:text-muted/50 focus:outline-none focus:border-amber focus:ring-1
               focus:ring-amber/20 transition-colors"
@@ -26,7 +29,7 @@ export default function KeyPointsList({ points, onChange }) {
               id={`remove-point-${i}`}
               onClick={() => remove(i)}
               className="text-muted hover:text-red-500 transition-colors text-lg leading-none w-6 shrink-0"
-              aria-label="Remove point"
+              aria-label={t('removePoint')}
             >
               ×
             </button>
@@ -38,7 +41,7 @@ export default function KeyPointsList({ points, onChange }) {
         onClick={add}
         className="text-xs text-muted hover:text-ink underline underline-offset-2 transition-colors ml-6"
       >
-        + Add point
+        + {t('addPoint')}
       </button>
     </div>
   )

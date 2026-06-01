@@ -5,8 +5,11 @@ import Button from '../components/ui/Button'
 import Spinner from '../components/ui/Spinner'
 import Badge from '../components/ui/Badge'
 import { getProviderSettings, saveProviderSettings, getProvidersCatalog } from '../services/userSettings'
+import LanguageToggle from '../components/ui/LanguageToggle'
+import { useLanguage } from '../i18n'
 
 export default function Settings() {
+  const { t } = useLanguage()
   const [settings,  setSettings]  = useState(null)
   const [catalog,   setCatalog]   = useState([])
   const [loading,   setLoading]   = useState(true)
@@ -70,8 +73,8 @@ export default function Settings() {
       <AppNav />
 
       <main className="max-w-2xl mx-auto px-6 py-8">
-        <h1 className="font-serif text-3xl font-light text-ink mb-1">Settings</h1>
-        <p className="text-muted text-sm mb-8">Manage your AI provider and generation plan.</p>
+        <h1 className="font-serif text-3xl font-light text-ink mb-1">{t('settingsTitle')}</h1>
+        <p className="text-muted text-sm mb-8">{t('settingsCopy')}</p>
 
         {loading ? (
           <div className="flex justify-center py-20"><Spinner size="lg" /></div>
@@ -81,7 +84,7 @@ export default function Settings() {
             {settings && (
               <div className="bg-surface rounded-2xl p-4 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted uppercase tracking-wide mb-1">Current plan</p>
+                  <p className="text-xs text-muted uppercase tracking-wide mb-1">{t('currentPlan')}</p>
                   <div className="flex items-center gap-2">
                     {settings.plan_type === 'free' ? (
                       <>
@@ -95,7 +98,7 @@ export default function Settings() {
                           {settings.byok_provider} · {settings.byok_model?.replace(/-\d{8}$/, '')}
                         </span>
                         {settings.has_api_key && (
-                          <span className="text-xs text-emerald-deep">· key saved</span>
+                          <span className="text-xs text-emerald-deep">· {t('keySaved')}</span>
                         )}
                       </>
                     )}
@@ -104,25 +107,30 @@ export default function Settings() {
               </div>
             )}
 
+            <div className="bg-surface rounded-2xl p-4 flex items-center justify-between">
+              <p className="text-xs text-muted uppercase tracking-wide">{t('language')}</p>
+              <LanguageToggle />
+            </div>
+
             {/* Plan selector */}
             <div>
               <p className="text-xs font-medium text-muted uppercase tracking-wide mb-3">
-                Change plan
+                {t('changePlan')}
               </p>
               <div className="grid sm:grid-cols-2 gap-3">
                 <PlanCard
                   id="plan-free"
                   icon="⚡"
-                  title="ByMe Free"
-                  desc="Gemini Flash · 10 posts/month · no key needed"
+                  title={t('freeAnalysis')}
+                  desc={t('freePlanDesc')}
                   selected={plan === 'free'}
                   onClick={() => setPlan('free')}
                 />
                 <PlanCard
                   id="plan-byok"
                   icon="🔑"
-                  title="Own API Key"
-                  desc="Choose Claude, OpenAI, or Gemini · unlimited posts"
+                  title={t('ownApiKey')}
+                  desc={t('byokPlanDesc')}
                   selected={plan === 'byok'}
                   onClick={() => setPlan('byok')}
                 />
@@ -133,12 +141,12 @@ export default function Settings() {
             {plan === 'byok' && (
               <div className="bg-surface/60 border border-border rounded-2xl p-5 space-y-4 animate-slide-up">
                 <p className="text-xs font-medium text-muted uppercase tracking-wide">
-                  API Key Configuration
+                  {t('apiKey')}
                 </p>
 
                 {/* Provider */}
                 <div>
-                  <p className="text-xs text-muted mb-2">Provider</p>
+                  <p className="text-xs text-muted mb-2">{t('aiProvider')}</p>
                   <div className="grid grid-cols-3 gap-2">
                     {catalog.map((p) => (
                       <button
@@ -159,7 +167,7 @@ export default function Settings() {
                 {/* Model */}
                 {provider && selectedProviderData && (
                   <div>
-                    <p className="text-xs text-muted mb-2">Model</p>
+                    <p className="text-xs text-muted mb-2">{t('model')}</p>
                     <select
                       id="settings-model"
                       value={model}
@@ -176,18 +184,18 @@ export default function Settings() {
                 {/* API Key */}
                 <Input
                   id="settings-api-key"
-                  label={settings?.has_api_key ? 'New API Key (leave blank to keep current)' : 'API Key'}
+                  label={settings?.has_api_key ? t('newApiKey') : t('apiKey')}
                   type="password"
-                  placeholder={selectedProviderData?.key_placeholder || 'Paste your API key'}
+                  placeholder={selectedProviderData?.key_placeholder || t('apiKeyPlaceholder')}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  hint="Encrypted and stored securely. Never shared or logged."
+                  hint={t('apiKeyHint')}
                 />
               </div>
             )}
 
             {error   && <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-xl px-4 py-3">{error}</p>}
-            {success && <p className="text-sm text-emerald-deep bg-emerald-soft border border-emerald-deep/20 rounded-xl px-4 py-3">✓ Settings saved successfully</p>}
+            {success && <p className="text-sm text-emerald-deep bg-emerald-soft border border-emerald-deep/20 rounded-xl px-4 py-3">✓ {t('settingsSaved')}</p>}
 
             <Button
               id="btn-save-settings"
@@ -196,7 +204,7 @@ export default function Settings() {
               fullWidth
               size="lg"
             >
-              Save settings
+              {t('saveSettings')}
             </Button>
           </div>
         )}

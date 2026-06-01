@@ -4,6 +4,7 @@ import { getStyleProfile } from '../../services/style'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
 import Spinner from '../ui/Spinner'
+import { useLanguage } from '../../i18n'
 
 const EMOJI_LABELS = {
   none: 'No emojis',
@@ -13,6 +14,7 @@ const EMOJI_LABELS = {
 }
 
 export default function StyleReviewStep() {
+  const { t } = useLanguage()
   const navigate = useNavigate()
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -40,38 +42,45 @@ export default function StyleReviewStep() {
       <div className="flex items-center gap-3 mb-2">
         <div className="w-2 h-2 bg-emerald-deep rounded-full" />
         <span className="text-xs font-medium text-emerald-deep uppercase tracking-wide">
-          Style profile ready
+          {t('profileReady')}
         </span>
       </div>
       <h1 className="font-serif text-4xl font-light text-ink mb-2">
-        Here&apos;s your writing voice
+        {t('reviewTitle')}
       </h1>
       <p className="text-muted text-sm mb-8">
-        We analysed {profile.posts_analyzed} posts. Review below — you can edit any of this later.
+        {t('reviewCopy', { count: profile.posts_analyzed })}
       </p>
 
       {/* Voice summary */}
       <div className="bg-amber-light border border-amber/30 rounded-2xl p-5 mb-5">
         <p className="text-xs font-medium text-amber-dark uppercase tracking-wide mb-2">
-          Your voice in a nutshell
+          {t('voiceSummary')}
         </p>
         <p className="text-sm text-ink leading-relaxed italic">&ldquo;{profile.raw_summary}&rdquo;</p>
       </div>
 
       {/* Style grid */}
       <div className="grid sm:grid-cols-2 gap-3 mb-5">
-        <StatCard label="Tone" value={profile.tone} />
-        <StatCard label="Formality" value={`${profile.formality_level} / 10`} />
-        <StatCard label="Avg post length" value={`~${profile.avg_post_length} words`} />
-        <StatCard label="Structure" value={profile.structure_preference} />
-        <StatCard label="Paragraph length" value={profile.paragraph_length} />
-        <StatCard label="Emoji usage" value={EMOJI_LABELS[profile.emoji_usage] || profile.emoji_usage} />
+        <StatCard label={t('tone')} value={profile.tone} />
+        <StatCard label={t('formality')} value={`${profile.formality_level} / 10`} />
+        <StatCard label={t('avgLength')} value={`~${profile.avg_post_length} words`} />
+        <StatCard label={t('structure')} value={profile.structure_preference} />
+        <StatCard label={t('paragraphs')} value={profile.paragraph_length} />
+        <StatCard label={t('emojiUsage')} value={EMOJI_LABELS[profile.emoji_usage] || profile.emoji_usage} />
       </div>
+
+      {profile.language_style_notes && (
+        <div className="mb-5">
+          <p className="text-xs text-muted uppercase tracking-wide mb-2">{t('languageStyle')}</p>
+          <p className="text-sm text-ink leading-relaxed">{profile.language_style_notes}</p>
+        </div>
+      )}
 
       {/* Opening / closing patterns */}
       {profile.opening_patterns?.length > 0 && (
         <div className="mb-3">
-          <p className="text-xs text-muted uppercase tracking-wide mb-2">How you typically open</p>
+          <p className="text-xs text-muted uppercase tracking-wide mb-2">{t('openingPatterns')}</p>
           <div className="flex flex-wrap gap-2">
             {profile.opening_patterns.map((p, i) => (
               <Badge key={i} variant="default">{p}</Badge>
@@ -82,7 +91,7 @@ export default function StyleReviewStep() {
 
       {profile.closing_patterns?.length > 0 && (
         <div className="mb-5">
-          <p className="text-xs text-muted uppercase tracking-wide mb-2">How you typically close</p>
+          <p className="text-xs text-muted uppercase tracking-wide mb-2">{t('closingPatterns')}</p>
           <div className="flex flex-wrap gap-2">
             {profile.closing_patterns.map((p, i) => (
               <Badge key={i} variant="default">{p}</Badge>
@@ -97,7 +106,7 @@ export default function StyleReviewStep() {
         fullWidth
         size="lg"
       >
-        Start generating posts →
+        {t('startGenerating')} →
       </Button>
     </div>
   )

@@ -25,7 +25,7 @@ async def generate_hooks(
     """
     # Fetch style profile
     result = db.table("style_profiles") \
-               .select("tone, formality_level, opening_patterns, vocabulary_notes, raw_summary") \
+               .select("tone, formality_level, opening_patterns, vocabulary_notes, language_style_notes, raw_summary") \
                .eq("user_id", user_id) \
                .single() \
                .execute()
@@ -64,6 +64,7 @@ async def generate_hooks(
         formality_level=  profile.get("formality_level", 5),
         opening_patterns= _format_list(profile.get("opening_patterns", [])),
         vocabulary_notes= profile.get("vocabulary_notes", "not specified"),
+        language_style_notes=profile.get("language_style_notes", "not specified"),
         raw_summary=      profile.get("raw_summary", "not specified"),
     )
 

@@ -20,6 +20,14 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  html[dir="rtl"] body {
+    text-align: right;
+  }
+
+  html[dir="rtl"] .text-left {
+    text-align: right;
+  }
+
   ::selection {
     background-color: #F5E8D5;
     color: #1A1917;

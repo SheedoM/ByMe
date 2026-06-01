@@ -7,5 +7,6 @@ export const uploadPosts = (file) => {
 }
 
 export const getStyleStatus  = () => api.get('/style/status')
+export const analyzeStyle    = () => api.post('/style/analyze')
 export const getStyleProfile = () => api.get('/style/profile')
 export const updateStyleProfile = (updates) => api.put('/style/profile', updates)

@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom'
 import { signIn } from '../services/auth'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
+import LanguageToggle from '../components/ui/LanguageToggle'
+import { useLanguage } from '../i18n'
 
 export default function Login() {
+  const { t } = useLanguage()
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
   const [error,    setError]    = useState('')
@@ -27,18 +30,21 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-paper flex flex-col items-center justify-center px-6">
-      <Link to="/" className="font-serif text-2xl font-light text-ink mb-10 tracking-tight">
-        ByMe
-      </Link>
+      <div className="absolute top-6 flex items-center justify-between w-full max-w-sm">
+        <Link to="/" className="font-serif text-2xl font-light text-ink tracking-tight">
+          ByMe
+        </Link>
+        <LanguageToggle compact />
+      </div>
 
       <div className="w-full max-w-sm animate-slide-up">
-        <h1 className="font-serif text-3xl font-light text-ink mb-1">Welcome back</h1>
-        <p className="text-muted text-sm mb-8">Sign in to your account</p>
+        <h1 className="font-serif text-3xl font-light text-ink mb-1">{t('loginTitle')}</h1>
+        <p className="text-muted text-sm mb-8">{t('loginCopy')}</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             id="email"
-            label="Email"
+            label={t('email')}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -46,7 +52,7 @@ export default function Login() {
           />
           <Input
             id="password"
-            label="Password"
+            label={t('password')}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -61,14 +67,14 @@ export default function Login() {
           )}
 
           <Button type="submit" loading={loading} fullWidth size="lg">
-            Sign in
+            {t('navSignIn')}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted mt-6">
-          No account?{' '}
+          {t('noAccount')}{' '}
           <Link to="/signup" className="text-ink underline underline-offset-2 hover:text-amber transition-colors">
-            Get started free
+            {t('getStartedFree')}
           </Link>
         </p>
       </div>

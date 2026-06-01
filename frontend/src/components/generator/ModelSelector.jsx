@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
 import Badge from '../ui/Badge'
+import { useLanguage } from '../../i18n'
 
 export default function ModelSelector({ settings }) {
+  const { t } = useLanguage()
   if (!settings) return null
 
   if (settings.plan_type === 'free' || !settings.byok_provider) {
@@ -12,7 +14,7 @@ export default function ModelSelector({ settings }) {
           to="/settings"
           className="text-xs text-muted underline underline-offset-2 hover:text-ink transition-colors"
         >
-          Use my own key
+          {t('byokAnalysis')}
         </Link>
       </div>
     )
@@ -35,7 +37,7 @@ export default function ModelSelector({ settings }) {
         to="/settings"
         className="text-xs text-muted underline underline-offset-2 hover:text-ink transition-colors"
       >
-        Change
+        {t('changePlan')}
       </Link>
     </div>
   )

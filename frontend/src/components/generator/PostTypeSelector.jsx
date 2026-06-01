@@ -1,19 +1,22 @@
-const POST_TYPES = [
-  { id: 'story',       label: 'Story',       desc: 'Open with a moment'         },
-  { id: 'hot_take',    label: 'Hot take',    desc: 'Lead with a bold claim'     },
-  { id: 'lesson',      label: 'Lesson',      desc: 'Insight first, then why'    },
-  { id: 'observation', label: 'Observation', desc: 'Something you noticed'      },
-  { id: 'update',      label: 'Update',      desc: 'Share what just happened'   },
-]
+import { useLanguage } from '../../i18n'
 
 export default function PostTypeSelector({ value, onChange }) {
+  const { t } = useLanguage()
+  const postTypes = [
+    { id: 'story',       label: t('postTypeStory'),       desc: t('postTypeStoryDesc') },
+    { id: 'hot_take',    label: t('postTypeHotTake'),     desc: t('postTypeHotTakeDesc') },
+    { id: 'lesson',      label: t('postTypeLesson'),      desc: t('postTypeLessonDesc') },
+    { id: 'observation', label: t('postTypeObservation'), desc: t('postTypeObservationDesc') },
+    { id: 'update',      label: t('postTypeUpdate'),      desc: t('postTypeUpdateDesc') },
+  ]
+
   return (
     <div>
       <p className="text-xs font-medium text-muted uppercase tracking-wide mb-2">
-        Post type
+        {t('postType')}
       </p>
       <div className="flex flex-wrap gap-2">
-        {POST_TYPES.map((type) => (
+        {postTypes.map((type) => (
           <button
             key={type.id}
             onClick={() => onChange(type.id)}

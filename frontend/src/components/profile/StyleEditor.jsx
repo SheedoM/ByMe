@@ -3,6 +3,7 @@ import { updateStyleProfile } from '../../services/style'
 import Input from '../ui/Input'
 import Textarea from '../ui/Textarea'
 import Button from '../ui/Button'
+import { useLanguage } from '../../i18n'
 
 const TONE_OPTIONS = [
   'conversational', 'educational', 'inspirational',
@@ -14,6 +15,7 @@ const PARAGRAPH_OPTIONS = ['short', 'medium', 'long']
 const EMOJI_OPTIONS     = ['none', 'minimal', 'moderate', 'heavy']
 
 export default function StyleEditor({ profile, onSaved }) {
+  const { t } = useLanguage()
   const [form,    setForm]    = useState({ ...profile })
   const [saving,  setSaving]  = useState(false)
   const [success, setSuccess] = useState(false)
@@ -35,6 +37,7 @@ export default function StyleEditor({ profile, onSaved }) {
         paragraph_length:    form.paragraph_length,
         storytelling_style:  form.storytelling_style,
         vocabulary_notes:    form.vocabulary_notes,
+        language_style_notes:form.language_style_notes,
         raw_summary:         form.raw_summary,
         opening_patterns:    form.opening_patterns,
         closing_patterns:    form.closing_patterns,
@@ -43,7 +46,7 @@ export default function StyleEditor({ profile, onSaved }) {
       onSaved?.()
       setTimeout(() => setSuccess(false), 3000)
     } catch (e) {
-      setError(e.response?.data?.detail || 'Save failed.')
+      setError(e.response?.data?.detail || t('saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -53,7 +56,7 @@ export default function StyleEditor({ profile, onSaved }) {
     <div className="space-y-5">
       {/* Tone */}
       <div>
-        <p className="text-xs font-medium text-muted uppercase tracking-wide mb-2">Tone</p>
+        <p className="text-xs font-medium text-muted uppercase tracking-wide mb-2">{t('tone')}</p>
         <div className="flex flex-wrap gap-2">
           {TONE_OPTIONS.map((t) => (
             <button
@@ -73,7 +76,7 @@ export default function StyleEditor({ profile, onSaved }) {
       {/* Formality */}
       <div>
         <label className="text-xs font-medium text-muted uppercase tracking-wide">
-          Formality — {form.formality_level} / 10
+          {t('formality')} — {form.formality_level} / 10
         </label>
         <input
           type="range" min={1} max={10} step={1}
@@ -82,14 +85,14 @@ export default function StyleEditor({ profile, onSaved }) {
           className="w-full mt-2 accent-amber"
         />
         <div className="flex justify-between text-xs text-muted mt-1">
-          <span>Very casual</span><span>Very formal</span>
+          <span>{t('veryCasual')}</span><span>{t('veryFormal')}</span>
         </div>
       </div>
 
       {/* Avg post length */}
       <Input
         id="avg-post-length"
-        label="Typical post length (words)"
+        label={t('avgLength')}
         type="number"
         value={form.avg_post_length}
         onChange={(e) => set('avg_post_length', e.target.value)}
@@ -97,7 +100,7 @@ export default function StyleEditor({ profile, onSaved }) {
 
       {/* Structure */}
       <div>
-        <p className="text-xs font-medium text-muted uppercase tracking-wide mb-2">Structure</p>
+        <p className="text-xs font-medium text-muted uppercase tracking-wide mb-2">{t('structure')}</p>
         <div className="flex gap-2">
           {STRUCTURE_OPTIONS.map((s) => (
             <button key={s}
@@ -115,7 +118,7 @@ export default function StyleEditor({ profile, onSaved }) {
 
       {/* Paragraph length */}
       <div>
-        <p className="text-xs font-medium text-muted uppercase tracking-wide mb-2">Paragraph length</p>
+        <p className="text-xs font-medium text-muted uppercase tracking-wide mb-2">{t('paragraphs')}</p>
         <div className="flex gap-2">
           {PARAGRAPH_OPTIONS.map((p) => (
             <button key={p}
@@ -133,7 +136,7 @@ export default function StyleEditor({ profile, onSaved }) {
 
       {/* Emoji usage */}
       <div>
-        <p className="text-xs font-medium text-muted uppercase tracking-wide mb-2">Emoji usage</p>
+        <p className="text-xs font-medium text-muted uppercase tracking-wide mb-2">{t('emojiUsage')}</p>
         <div className="flex gap-2 flex-wrap">
           {EMOJI_OPTIONS.map((e) => (
             <button key={e}
@@ -152,38 +155,47 @@ export default function StyleEditor({ profile, onSaved }) {
       {/* Storytelling style */}
       <Textarea
         id="storytelling-style"
-        label="Storytelling style"
+        label={t('storytellingStyle')}
         value={form.storytelling_style || ''}
         onChange={(e) => set('storytelling_style', e.target.value)}
         rows={3}
-        placeholder="How do you tell stories or make points?"
+        placeholder={t('storytellingPlaceholder')}
       />
 
       {/* Vocabulary notes */}
       <Textarea
         id="vocabulary-notes"
-        label="Vocabulary notes"
+        label={t('vocabularyNotes')}
         value={form.vocabulary_notes || ''}
         onChange={(e) => set('vocabulary_notes', e.target.value)}
         rows={2}
-        placeholder="Phrases you use often, words you avoid…"
+        placeholder={t('vocabularyPlaceholder')}
+      />
+
+      <Textarea
+        id="language-style-notes"
+        label={t('languageStyle')}
+        value={form.language_style_notes || ''}
+        onChange={(e) => set('language_style_notes', e.target.value)}
+        rows={2}
+        placeholder={t('languageStylePlaceholder')}
       />
 
       {/* Summary */}
       <Textarea
         id="raw-summary"
-        label="Voice summary"
+        label={t('voiceSummary')}
         value={form.raw_summary || ''}
         onChange={(e) => set('raw_summary', e.target.value)}
         rows={3}
-        placeholder="A short description of your writing voice"
+        placeholder={t('summaryPlaceholder')}
       />
 
       {error   && <p className="text-sm text-red-500">{error}</p>}
-      {success && <p className="text-sm text-emerald-deep">✓ Style profile updated</p>}
+      {success && <p className="text-sm text-emerald-deep">✓ {t('styleUpdated')}</p>}
 
       <Button id="btn-save-style" onClick={handleSave} loading={saving} fullWidth size="lg">
-        Save changes
+        {t('saveSettings')}
       </Button>
     </div>
   )

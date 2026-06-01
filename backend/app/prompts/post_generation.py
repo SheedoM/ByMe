@@ -16,7 +16,12 @@ Structure preference: {structure_preference}
 Paragraph length: {paragraph_length}
 Storytelling style: {storytelling_style}
 Vocabulary notes: {vocabulary_notes}
+Language/register notes: {language_style_notes}
 Overall voice: {raw_summary}
+
+REFERENCE EXAMPLES FROM THEIR OWN POSTS:
+{style_examples}
+
 # POST TYPE INSTRUCTION:
 {post_type_constraint}
 
@@ -30,7 +35,11 @@ CRITICAL RULES:
 5. Stay within ~20 words of their typical post length. Do not over-write.
 6. Use their vocabulary. Avoid words or phrases they would never use.
 7. If emoji_usage is "none", use zero emojis. If "minimal", use 1 to 2 maximum.
-8. The goal: if someone who knows this person read this post, they would say "yes, that's them."
+8. Preserve their natural language, register, dialect, and code-switching pattern. Do not translate unless the user explicitly asks.
+9. If the style notes say they write in colloquial Arabic, do NOT drift into Modern Standard Arabic. Avoid formal phrases like "لماذا كل هذا", "بدلاً من", "لم يعد", "إن", "قد يكون", unless the profile says they use them.
+10. Match their spacing rhythm. If they write in short separated lines, use short separated lines. Preserve blank lines between ideas. Do not collapse the post into dense paragraphs.
+11. Match their punctuation habits, question style, and casual fillers. If they use English technical terms inside Arabic, keep that natural code-switching.
+12. The goal: if someone who knows this person read this post, they would say "yes, that's them."
 
 Write only the post. No explanation, no preamble, no title.
 """

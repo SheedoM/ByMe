@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { useAuth } from './context/AuthContext'
+import { LanguageProvider } from './i18n'
 import { AuthGuard } from './components/auth/AuthGuard'
 import { OnboardingGuard } from './components/auth/OnboardingGuard'
 
@@ -25,9 +26,10 @@ function PublicRoute({ children }) {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+    <LanguageProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
           {/* Public routes — redirect to /app if already signed in */}
           <Route path="/"       element={<Landing />} />
           <Route path="/login"  element={<PublicRoute><Login /></PublicRoute>} />
@@ -50,8 +52,9 @@ export default function App() {
           } />
 
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </LanguageProvider>
   )
 }

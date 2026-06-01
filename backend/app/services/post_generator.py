@@ -14,6 +14,12 @@ def _format_list(items: list) -> str:
     return " | ".join(f'"{item}"' for item in items)
 
 
+def _format_style_examples(posts: list[dict]) -> str:
+    if not posts:
+        return "not available"
+    return "\n\n---\n\n".join((post.get("content") or "")[:1200] for post in posts[:3])
+
+
 async def generate_post(
     db: Client,
     user_id: str,
@@ -49,6 +55,14 @@ async def generate_post(
     profile = result.data
     if profile.get("status") != "ready":
         raise HTTPException(status_code=400, detail="Style profile is not ready yet.")
+
+    examples_result = db.table("raw_posts") \
+                        .select("content, post_date") \
+                        .eq("user_id", user_id) \
+                        .order("post_date", desc=True, nullsfirst=False) \
+                        .limit(3) \
+                        .execute()
+    style_examples = getattr(examples_result, "data", None) or []
 
     # 2. Fetch user settings
     settings_result = db.table("user_settings") \
@@ -117,7 +131,9 @@ async def generate_post(
         paragraph_length=    profile.get("paragraph_length", "short"),
         storytelling_style=  profile.get("storytelling_style", "not specified"),
         vocabulary_notes=    profile.get("vocabulary_notes", "not specified"),
+        language_style_notes=profile.get("language_style_notes", "not specified"),
         raw_summary=         profile.get("raw_summary", "not specified"),
+        style_examples=      _format_style_examples(style_examples),
         post_type_constraint=post_type_constraint,
         hook_constraint=hook_constraint,
     )

@@ -7,8 +7,10 @@ import { useGenerator } from '../hooks/useGenerator'
 import { useEffect } from 'react'
 import { getUsage } from '../services/generate'
 import { getProviderSettings } from '../services/userSettings'
+import { useLanguage } from '../i18n'
 
 export default function Generator() {
+  const { t } = useLanguage()
   const {
     topic, setTopic,
     keyPoints, setKeyPoints,
@@ -41,13 +43,13 @@ export default function Generator() {
     <div className="min-h-screen bg-paper">
       <AppNav />
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <main className="max-w-5xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-serif text-3xl font-light text-ink">Generate a post</h1>
+            <h1 className="font-serif text-3xl font-light text-ink">{t('generateTitle')}</h1>
             <p className="text-muted text-sm mt-0.5">
-              Tell us what to write about. We&apos;ll write it in your voice.
+              {t('generateCopy')}
             </p>
           </div>
             <div className="flex flex-col items-start sm:items-end gap-2">
@@ -64,7 +66,7 @@ export default function Generator() {
         <div className="grid lg:grid-cols-2 gap-6">
           <div className="bg-surface/40 border border-border rounded-2xl p-6">
             <h2 className="text-xs font-medium text-muted uppercase tracking-wide mb-5">
-              Your input
+              {t('yourInput')}
             </h2>
             <InputPanel
               topic={topic}
@@ -83,7 +85,7 @@ export default function Generator() {
 
           <div className="bg-surface/40 border border-border rounded-2xl p-6">
             <h2 className="text-xs font-medium text-muted uppercase tracking-wide mb-5">
-              Your post
+              {t('yourPost')}
             </h2>
             <OutputPanel
               output={output}

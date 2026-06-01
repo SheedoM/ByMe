@@ -41,9 +41,11 @@ cp frontend/.env.example frontend/.env.local
 
 ### 2. Database
 
-In Supabase SQL Editor, run both migrations in order:
+In Supabase SQL Editor, run the migrations in order:
 1. `supabase/migrations/001_initial_schema.sql`
 2. `supabase/migrations/002_user_settings.sql`
+3. `supabase/migrations/003_feedback_and_post_type.sql`
+4. `supabase/migrations/004_style_language_notes.sql`
 
 ### 3. Backend
 
@@ -76,7 +78,7 @@ Open [http://localhost:5173](http://localhost:5173)
 ## Onboarding Flow
 
 ```
-Sign up → Upload LinkedIn CSV → AI analyses style → Choose plan → Review profile → Generate posts
+Sign up → Upload LinkedIn archive ZIP or Shares CSV → Choose analysis method → AI analyses style → Review profile → Generate posts
 ```
 
 ### Plans

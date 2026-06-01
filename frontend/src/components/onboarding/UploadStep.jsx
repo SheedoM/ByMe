@@ -1,22 +1,27 @@
 import { useState, useRef } from 'react'
 import { uploadPosts } from '../../services/style'
 import Button from '../ui/Button'
+import { useLanguage } from '../../i18n'
 
 export default function UploadStep({ onDone }) {
+  const { t } = useLanguage()
   const [dragging,  setDragging]  = useState(false)
   const [file,      setFile]      = useState(null)
   const [uploading, setUploading] = useState(false)
   const [error,     setError]     = useState('')
+  const [summary,   setSummary]   = useState('')
   const inputRef = useRef(null)
 
   const handleFile = (f) => {
     if (!f) return
-    if (!f.name.endsWith('.csv')) {
-      setError('Please upload a .csv file from LinkedIn.')
+    const lower = f.name.toLowerCase()
+    if (!lower.endsWith('.zip') && !lower.endsWith('.csv') && !lower.endsWith('.xlsx')) {
+      setError(t('uploadFileTypeError'))
       return
     }
     setFile(f)
     setError('')
+    setSummary('')
   }
 
   const handleDrop = (e) => {
@@ -30,10 +35,13 @@ export default function UploadStep({ onDone }) {
     setUploading(true)
     setError('')
     try {
-      await uploadPosts(file)
-      onDone()
+      const { data } = await uploadPosts(file)
+      const found = data.usable_posts_found ?? data.posts_found
+      const used = data.posts_used ?? data.posts_found
+      setSummary(t('importSummary', { found, used }))
+      setTimeout(onDone, 900)
     } catch (e) {
-      setError(e.response?.data?.detail || 'Upload failed. Please try again.')
+      setError(e.response?.data?.detail || (e.request ? t('uploadNetworkError') : t('uploadGenericError')))
     } finally {
       setUploading(false)
     }
@@ -41,12 +49,14 @@ export default function UploadStep({ onDone }) {
 
   return (
     <div className="w-full max-w-lg animate-slide-up">
-      <h1 className="font-serif text-4xl font-light text-ink mb-2">
-        Upload your posts
+      <h1 className="font-serif text-4xl font-light text-ink mb-3 text-center">
+        {t('uploadTitle')}
       </h1>
-      <p className="text-muted text-sm mb-8 leading-relaxed">
-        Export your LinkedIn posts (Settings → Data Privacy → Posts),
-        then upload the <code className="bg-surface px-1.5 py-0.5 rounded text-xs">Share.csv</code> file here.
+      <p className="text-muted text-sm mb-3 leading-relaxed text-center">
+        {t('uploadCopy')}
+      </p>
+      <p className="text-muted text-xs mb-8 leading-relaxed text-center">
+        {t('uploadHint')}
       </p>
 
       {/* Drop zone */}
@@ -68,7 +78,7 @@ export default function UploadStep({ onDone }) {
         <input
           ref={inputRef}
           type="file"
-          accept=".csv"
+          accept=".zip,.csv,.xlsx"
           className="hidden"
           onChange={(e) => handleFile(e.target.files[0])}
         />
@@ -78,14 +88,14 @@ export default function UploadStep({ onDone }) {
             <div className="text-3xl mb-2">✓</div>
             <p className="text-sm font-medium text-ink">{file.name}</p>
             <p className="text-xs text-muted mt-1">
-              {(file.size / 1024).toFixed(0)} KB · click to change
+              {(file.size / 1024).toFixed(0)} KB · {t('clickToChange')}
             </p>
           </>
         ) : (
           <>
             <div className="text-3xl mb-3 opacity-30">↑</div>
-            <p className="text-sm text-ink font-medium">Drop your CSV here</p>
-            <p className="text-xs text-muted mt-1">or click to browse</p>
+            <p className="text-sm text-ink font-medium">{t('dropFile')}</p>
+            <p className="text-xs text-muted mt-1">{t('browseFile')}</p>
           </>
         )}
       </div>
@@ -93,6 +103,12 @@ export default function UploadStep({ onDone }) {
       {error && (
         <p className="mt-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
           {error}
+        </p>
+      )}
+
+      {summary && (
+        <p className="mt-3 text-sm text-emerald-deep bg-emerald-soft border border-emerald-deep/20 rounded-xl px-4 py-3">
+          {summary}
         </p>
       )}
 
@@ -104,11 +120,11 @@ export default function UploadStep({ onDone }) {
         size="lg"
         className="mt-6"
       >
-        Analyse my writing style →
+        {t('uploadButton')} →
       </Button>
 
       <p className="text-center text-xs text-muted mt-4">
-        We analyse your posts to extract your style. Nothing is sold or shared.
+        {t('uploadPrivacy')}
       </p>
     </div>
   )

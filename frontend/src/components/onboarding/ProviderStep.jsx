@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import { saveProviderSettings, getProvidersCatalog } from '../../services/userSettings'
+import { analyzeStyle } from '../../services/style'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 import Spinner from '../ui/Spinner'
+import { useLanguage } from '../../i18n'
 
 export default function ProviderStep({ onDone }) {
+  const { t } = useLanguage()
   const [choice,    setChoice]    = useState(null)      // null | 'free' | 'byok'
   const [catalog,   setCatalog]   = useState([])
   const [provider,  setProvider]  = useState('')
@@ -33,6 +36,7 @@ export default function ProviderStep({ onDone }) {
     setError('')
     try {
       await saveProviderSettings({ plan_type: 'free' })
+      await analyzeStyle()
       onDone()
     } catch (e) {
       setError(e.response?.data?.detail || 'Failed to save. Please try again.')
@@ -42,8 +46,8 @@ export default function ProviderStep({ onDone }) {
   }
 
   const handleBYOK = async () => {
-    if (!provider) { setError('Please select a provider.'); return }
-    if (!apiKey.trim()) { setError('Please enter your API key.'); return }
+    if (!provider) { setError(t('providerRequired')); return }
+    if (!apiKey.trim()) { setError(t('apiKeyRequired')); return }
     setSaving(true)
     setError('')
     try {
@@ -53,6 +57,7 @@ export default function ProviderStep({ onDone }) {
         byok_model:    model,
         byok_api_key:  apiKey,
       })
+      await analyzeStyle()
       onDone()
     } catch (e) {
       setError(e.response?.data?.detail || 'Failed to save. Please check your key and try again.')
@@ -66,10 +71,10 @@ export default function ProviderStep({ onDone }) {
   return (
     <div className="w-full max-w-2xl animate-slide-up">
       <h1 className="font-serif text-4xl font-light text-ink mb-2">
-        How do you want to power ByMe?
+        {t('providerTitle')}
       </h1>
       <p className="text-muted text-sm mb-8">
-        Your style profile is ready. Now choose which AI model will generate your posts.
+        {t('providerCopy')}
       </p>
 
       <div className="grid sm:grid-cols-2 gap-4 mb-6">
@@ -88,23 +93,23 @@ export default function ProviderStep({ onDone }) {
             <span className="text-2xl">⚡</span>
             {choice === 'free' && (
               <span className="text-xs font-medium text-amber bg-amber-light border border-amber/30 px-2 py-0.5 rounded-full">
-                Selected
+                {t('selected')}
               </span>
             )}
           </div>
-          <h3 className="font-medium text-ink mb-1">ByMe Free</h3>
+          <h3 className="font-medium text-ink mb-1">{t('freeAnalysis')}</h3>
           <p className="text-xs text-muted leading-relaxed mb-3">
-            Powered by Gemini Flash — fast and capable. No API key needed.
+            {t('freeAnalysisDesc')}
           </p>
           <ul className="text-xs text-muted space-y-1">
             <li className="flex items-center gap-1.5">
-              <span className="text-emerald-deep">✓</span> 10 posts per month
+              <span className="text-emerald-deep">✓</span> 10 posts/month
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="text-emerald-deep">✓</span> No setup required
+              <span className="text-emerald-deep">✓</span> {t('noSetup')}
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="text-emerald-deep">✓</span> Great for getting started
+              <span className="text-emerald-deep">✓</span> {t('goodStart')}
             </li>
           </ul>
         </button>
@@ -124,23 +129,23 @@ export default function ProviderStep({ onDone }) {
             <span className="text-2xl">🔑</span>
             {choice === 'byok' && (
               <span className="text-xs font-medium text-amber bg-amber-light border border-amber/30 px-2 py-0.5 rounded-full">
-                Selected
+                {t('selected')}
               </span>
             )}
           </div>
-          <h3 className="font-medium text-ink mb-1">Use my own API key</h3>
+          <h3 className="font-medium text-ink mb-1">{t('byokAnalysis')}</h3>
           <p className="text-xs text-muted leading-relaxed mb-3">
-            Bring your own key from Claude, OpenAI, or Gemini for unlimited posts.
+            {t('byokAnalysisDesc')}
           </p>
           <ul className="text-xs text-muted space-y-1">
             <li className="flex items-center gap-1.5">
-              <span className="text-emerald-deep">✓</span> Unlimited posts
+              <span className="text-emerald-deep">✓</span> {t('unlimitedPosts')}
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="text-emerald-deep">✓</span> Choose your model
+              <span className="text-emerald-deep">✓</span> {t('chooseModel')}
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="text-emerald-deep">✓</span> Your data, your key
+              <span className="text-emerald-deep">✓</span> {t('yourDataKey')}
             </li>
           </ul>
         </button>
@@ -156,7 +161,7 @@ export default function ProviderStep({ onDone }) {
               {/* Provider selector */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-medium text-muted uppercase tracking-wide">
-                  AI Provider
+                  {t('aiProvider')}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {catalog.map((p) => (
@@ -181,7 +186,7 @@ export default function ProviderStep({ onDone }) {
               {provider && selectedProviderData && (
                 <div className="flex flex-col gap-1.5 animate-fade-in">
                   <label className="text-xs font-medium text-muted uppercase tracking-wide">
-                    Model
+                    {t('model')}
                   </label>
                   <select
                     id="byok-model"
@@ -200,12 +205,12 @@ export default function ProviderStep({ onDone }) {
               {provider && (
                 <Input
                   id="byok-api-key"
-                  label="API Key"
+                  label={t('apiKey')}
                   type="password"
-                  placeholder={selectedProviderData?.key_placeholder || 'Paste your API key'}
+                  placeholder={selectedProviderData?.key_placeholder || t('apiKeyPlaceholder')}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  hint="Your key is encrypted and stored securely. It never leaves your account."
+                  hint={t('apiKeyHint')}
                   className="animate-fade-in"
                 />
               )}
@@ -230,7 +235,7 @@ export default function ProviderStep({ onDone }) {
           fullWidth
           size="lg"
         >
-          Continue with Free Tier →
+          {t('analyzeFree')} →
         </Button>
       )}
 
@@ -243,13 +248,13 @@ export default function ProviderStep({ onDone }) {
           fullWidth
           size="lg"
         >
-          Save & Continue →
+          {t('analyzeByok')} →
         </Button>
       )}
 
       {choice && (
         <p className="text-center text-xs text-muted mt-4">
-          You can change this anytime in Settings.
+          {t('changeAnytime')}
         </p>
       )}
     </div>

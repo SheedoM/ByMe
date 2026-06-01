@@ -1,4 +1,5 @@
 import Badge from '../ui/Badge'
+import { useLanguage } from '../../i18n'
 
 const EMOJI_LABELS = {
   none: 'No emojis',
@@ -8,6 +9,7 @@ const EMOJI_LABELS = {
 }
 
 export default function StyleCard({ profile }) {
+  const { t } = useLanguage()
   if (!profile) return null
 
   return (
@@ -15,7 +17,7 @@ export default function StyleCard({ profile }) {
       {/* Summary */}
       <div className="bg-amber-light border border-amber/30 rounded-2xl p-5">
         <p className="text-xs font-medium text-amber-dark uppercase tracking-wide mb-2">
-          Your voice
+          {t('yourVoice')}
         </p>
         <p className="text-sm text-ink leading-relaxed italic">
           &ldquo;{profile.raw_summary}&rdquo;
@@ -24,18 +26,22 @@ export default function StyleCard({ profile }) {
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <Stat label="Tone"            value={profile.tone} />
-        <Stat label="Formality"       value={`${profile.formality_level} / 10`} />
-        <Stat label="Avg length"      value={`~${profile.avg_post_length} words`} />
-        <Stat label="Structure"       value={profile.structure_preference} />
-        <Stat label="Paragraphs"      value={profile.paragraph_length} />
-        <Stat label="Emoji usage"     value={EMOJI_LABELS[profile.emoji_usage] || profile.emoji_usage} />
+        <Stat label={t('tone')} value={profile.tone} />
+        <Stat label={t('formality')} value={`${profile.formality_level} / 10`} />
+        <Stat label={t('avgLength')} value={`~${profile.avg_post_length} words`} />
+        <Stat label={t('structure')} value={profile.structure_preference} />
+        <Stat label={t('paragraphs')} value={profile.paragraph_length} />
+        <Stat label={t('emojiUsage')} value={EMOJI_LABELS[profile.emoji_usage] || profile.emoji_usage} />
       </div>
+
+      {profile.language_style_notes && (
+        <Detail label={t('languageStyle')} value={profile.language_style_notes} />
+      )}
 
       {/* Opening patterns */}
       {profile.opening_patterns?.length > 0 && (
         <div>
-          <p className="text-xs text-muted uppercase tracking-wide mb-2">How you open posts</p>
+          <p className="text-xs text-muted uppercase tracking-wide mb-2">{t('openingPatterns')}</p>
           <div className="flex flex-wrap gap-2">
             {profile.opening_patterns.map((p, i) => (
               <Badge key={i}>{p}</Badge>
@@ -47,7 +53,7 @@ export default function StyleCard({ profile }) {
       {/* Closing patterns */}
       {profile.closing_patterns?.length > 0 && (
         <div>
-          <p className="text-xs text-muted uppercase tracking-wide mb-2">How you close posts</p>
+          <p className="text-xs text-muted uppercase tracking-wide mb-2">{t('closingPatterns')}</p>
           <div className="flex flex-wrap gap-2">
             {profile.closing_patterns.map((p, i) => (
               <Badge key={i}>{p}</Badge>
@@ -58,14 +64,14 @@ export default function StyleCard({ profile }) {
 
       {/* Storytelling / Vocabulary */}
       {profile.storytelling_style && (
-        <Detail label="Storytelling style" value={profile.storytelling_style} />
+        <Detail label={t('storytellingStyle')} value={profile.storytelling_style} />
       )}
       {profile.vocabulary_notes && (
-        <Detail label="Vocabulary notes" value={profile.vocabulary_notes} />
+        <Detail label={t('vocabularyNotes')} value={profile.vocabulary_notes} />
       )}
 
       <p className="text-xs text-muted">
-        Last updated from {profile.posts_analyzed} posts.
+        {t('lastUpdated', { count: profile.posts_analyzed })}
       </p>
     </div>
   )

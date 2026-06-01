@@ -26,6 +26,7 @@ Tone: {tone}
 Formality: {formality_level}/10
 Opening patterns: {opening_patterns}
 Vocabulary notes: {vocabulary_notes}
+Language/register notes: {language_style_notes}
 Overall voice: {raw_summary}
 """
 

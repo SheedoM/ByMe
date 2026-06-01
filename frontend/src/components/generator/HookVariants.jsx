@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { generateHooks } from '../../services/generate'
 import Spinner from '../ui/Spinner'
+import { useLanguage } from '../../i18n'
 
 export default function HookVariants({ topic, keyPoints, onSelect }) {
+  const { t } = useLanguage()
   const [hooks,   setHooks]   = useState([])
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState(null)
@@ -19,7 +21,7 @@ export default function HookVariants({ topic, keyPoints, onSelect }) {
       const { data } = await generateHooks({ topic, key_points: points })
       setHooks(data.hooks || [])
     } catch {
-      setError('Could not generate hooks. Try again.')
+      setError(t('hookError'))
     } finally {
       setLoading(false)
     }
@@ -38,12 +40,12 @@ export default function HookVariants({ topic, keyPoints, onSelect }) {
         className="text-xs text-muted underline underline-offset-2 hover:text-ink
                    transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        {loading ? 'Generating hooks…' : hooks.length ? 'Regenerate hooks' : 'Try different hooks ↗'}
+        {loading ? t('generatingHooks') : hooks.length ? t('regenerateHooks') : `${t('tryHooks')} ↗`}
       </button>
 
       {loading && (
         <div className="mt-3 flex items-center gap-2 text-xs text-muted">
-          <Spinner size="sm" /> Crafting 3 opening lines…
+          <Spinner size="sm" /> {t('craftingHooks')}
         </div>
       )}
 
@@ -53,7 +55,7 @@ export default function HookVariants({ topic, keyPoints, onSelect }) {
 
       {hooks.length > 0 && (
         <div className="mt-3 space-y-2">
-          <p className="text-xs text-muted uppercase tracking-wide">Pick a hook to build from:</p>
+          <p className="text-xs text-muted uppercase tracking-wide">{t('pickHook')}</p>
           {hooks.map((hook, i) => (
             <button
               key={i}
@@ -67,13 +69,13 @@ export default function HookVariants({ topic, keyPoints, onSelect }) {
               <span className="text-xs text-muted mr-2">{i + 1}.</span>
               {hook}
               {chosen === hook && (
-                <span className="ml-2 text-xs text-amber font-medium">selected</span>
+                <span className="ml-2 text-xs text-amber font-medium">{t('hookSelected')}</span>
               )}
             </button>
           ))}
           {chosen && (
             <p className="text-xs text-muted pt-1">
-              Hook locked in. Hit "Write my post" to generate with this opening.
+              {t('hookLocked')}
             </p>
           )}
         </div>

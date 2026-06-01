@@ -1,25 +1,15 @@
 import { Link } from 'react-router-dom'
 import PublicNav from '../components/layout/PublicNav'
-
-const features = [
-  {
-    icon: '📤',
-    title: 'Upload once',
-    desc: 'Export your LinkedIn posts and upload the CSV. That\'s all the training data we need.',
-  },
-  {
-    icon: '🧠',
-    title: 'We learn your style',
-    desc: 'AI analyses your tone, structure, vocab, and patterns to build a precise style profile.',
-  },
-  {
-    icon: '✍',
-    title: 'Generate in your voice',
-    desc: 'Type a topic and key points. Get a post that sounds exactly like you — not like ChatGPT.',
-  },
-]
+import { useLanguage } from '../i18n'
 
 export default function Landing() {
+  const { t } = useLanguage()
+  const features = [
+    { icon: '📤', title: t('featureUploadTitle'), desc: t('featureUploadDesc') },
+    { icon: '🧠', title: t('featureLearnTitle'), desc: t('featureLearnDesc') },
+    { icon: '✍', title: t('featureGenerateTitle'), desc: t('featureGenerateDesc') },
+  ]
+
   return (
     <div className="min-h-screen bg-paper">
       <PublicNav />
@@ -29,18 +19,17 @@ export default function Landing() {
         <section className="pt-20 pb-16 text-center animate-slide-up">
           <div className="inline-flex items-center gap-2 bg-amber-light border border-amber/30 text-amber-dark text-xs font-medium px-4 py-1.5 rounded-full mb-8">
             <span className="w-1.5 h-1.5 bg-amber rounded-full animate-pulse" />
-            LinkedIn post generator that actually sounds like you
+            {t('heroBadge')}
           </div>
 
           <h1 className="font-serif text-6xl sm:text-7xl font-light text-ink leading-[1.1] tracking-tight mb-6">
-            Write like you.
+            {t('heroTitle')}
             <br />
-            <span className="italic text-muted">Always.</span>
+            <span className="italic text-muted">{t('heroTitleAccent')}</span>
           </h1>
 
           <p className="text-muted text-lg max-w-xl mx-auto leading-relaxed mb-10">
-            ByMe learns your unique LinkedIn writing style from your past posts —
-            then generates new ones that are unmistakably <em>you</em>.
+            {t('heroCopy')}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -50,7 +39,7 @@ export default function Landing() {
                 px-8 py-4 rounded-2xl text-sm font-medium hover:bg-ink/90 transition-all
                 hover:shadow-lg hover:shadow-ink/10 active:scale-[0.98]"
             >
-              Get started free
+              {t('getStartedFree')}
             </Link>
             <Link
               to="/login"
@@ -58,12 +47,12 @@ export default function Landing() {
                 border border-border px-8 py-4 rounded-2xl text-sm font-medium
                 hover:bg-border transition-all active:scale-[0.98]"
             >
-              Sign in
+              {t('navSignIn')}
             </Link>
           </div>
 
           <p className="text-xs text-muted mt-4">
-            Free tier: 10 posts/month. No credit card needed.
+            {t('freeTierNote')}
           </p>
         </section>
 
@@ -73,7 +62,7 @@ export default function Landing() {
         {/* Features */}
         <section className="pb-24">
           <h2 className="font-serif text-3xl font-light text-ink text-center mb-12">
-            How it works
+            {t('howItWorks')}
           </h2>
           <div className="grid sm:grid-cols-3 gap-6">
             {features.map((f, i) => (
@@ -92,11 +81,10 @@ export default function Landing() {
         {/* Bottom CTA */}
         <section className="text-center pb-24 border-t border-border pt-16">
           <h2 className="font-serif text-4xl font-light text-ink mb-4">
-            Ready to write like you?
+            {t('bottomCtaTitle')}
           </h2>
           <p className="text-muted text-sm mb-8 max-w-sm mx-auto">
-            Upload your LinkedIn posts, choose your plan, and start generating.
-            Takes less than 2 minutes.
+            {t('bottomCtaCopy')}
           </p>
           <Link
             to="/signup"
@@ -104,7 +92,7 @@ export default function Landing() {
               rounded-2xl text-sm font-medium hover:bg-amber-dark transition-all
               hover:shadow-lg hover:shadow-amber/20 active:scale-[0.98]"
           >
-            Start for free →
+            {t('startForFree')} →
           </Link>
         </section>
       </main>
