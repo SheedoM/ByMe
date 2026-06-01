@@ -5,11 +5,11 @@ Return ONLY a valid JSON object. No preamble. No explanation. No markdown code f
 
 The JSON must have exactly this structure:
 {
-  "tone": "string — e.g. conversational, inspirational, educational, analytical, personal, blunt",
+  "tone": "string — primary tone label (e.g. conversational, inspirational, educational, analytical, personal, blunt), followed by a semicolon and any secondary tone shifts if they exist across different post types. Example: 'conversational; shifts to blunt in opinion posts, reflective in personal stories'",
   "formality_level": number between 1 (very casual) and 10 (very formal),
   "avg_post_length": number — estimated word count of a typical post,
-  "opening_patterns": ["string", "string", "string"] — 3 to 5 common ways they start posts,
-  "closing_patterns": ["string", "string", "string"] — 3 to 5 common ways they end posts,
+  "opening_patterns": ["string", ...] — 5 to 10 entries. Each entry MUST be an actual verbatim or near-verbatim opening line copied from the posts — NOT a description. Pick openings that show the full range of how this person starts posts. Include the most common AND the less common variants so the variety is preserved.
+  "closing_patterns": ["string", ...] — 4 to 8 entries. Same rule: actual verbatim or near-verbatim closing lines from the posts, showing the full range.
   "emoji_usage": "none | minimal | moderate | heavy",
   "structure_preference": "prose | bullets | mixed",
   "paragraph_length": "short | medium | long",
@@ -28,6 +28,8 @@ Pay special attention to:
 - Their exact dialect/register. If they use Egyptian colloquial Arabic, say that plainly.
 - Their line-break rhythm: short lines, blank lines, dense paragraphs, bullets, questions, and spacing.
 - Phrases they naturally use versus phrases that would sound too formal for them.
+- The FULL RANGE of how they open and close posts — copy real lines, do not summarize them.
+- How their tone shifts between post types (stories vs opinions vs lessons).
 
 POSTS:
 {posts}

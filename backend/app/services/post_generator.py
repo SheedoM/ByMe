@@ -1,4 +1,5 @@
 import os
+import random
 from datetime import date
 from supabase import Client
 from fastapi import HTTPException
@@ -17,7 +18,7 @@ def _format_list(items: list) -> str:
 def _format_style_examples(posts: list[dict]) -> str:
     if not posts:
         return "not available"
-    return "\n\n---\n\n".join((post.get("content") or "")[:1200] for post in posts[:3])
+    return "\n\n---\n\n".join((post.get("content") or "")[:1200] for post in posts)
 
 
 async def generate_post(
@@ -59,10 +60,10 @@ async def generate_post(
     examples_result = db.table("raw_posts") \
                         .select("content, post_date") \
                         .eq("user_id", user_id) \
-                        .order("post_date", desc=True, nullsfirst=False) \
-                        .limit(3) \
+                        .eq("in_style", True) \
                         .execute()
-    style_examples = getattr(examples_result, "data", None) or []
+    examples_pool = getattr(examples_result, "data", None) or []
+    style_examples = random.sample(examples_pool, min(5, len(examples_pool)))
 
     # 2. Fetch user settings
     settings_result = db.table("user_settings") \

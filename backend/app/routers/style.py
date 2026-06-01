@@ -1,10 +1,15 @@
 from fastapi import APIRouter, UploadFile, BackgroundTasks, HTTPException, Depends
+from pydantic import BaseModel
 from ..config import get_supabase
 from ..middleware.auth import get_current_user
 from ..services.csv_parser import parse_linkedin_posts_file, validate_posts_file
 from ..services.style_extractor import extract_and_store_style
 
 router = APIRouter()
+
+
+class SelectPostsRequest(BaseModel):
+    count: int | None = None  # None means "all"
 
 
 @router.post("/upload")
@@ -51,6 +56,38 @@ async def upload_posts(
     }
 
 
+@router.post("/select")
+async def select_posts(
+    body: SelectPostsRequest,
+    user_id: str = Depends(get_current_user),
+):
+    """Mark the N most recent posts as in_style=True; mark the rest False."""
+    db = get_supabase()
+    result = db.table("raw_posts") \
+               .select("id, post_date") \
+               .eq("user_id", user_id) \
+               .order("post_date", desc=True, nullsfirst=False) \
+               .execute()
+    posts = result.data or []
+
+    if not posts:
+        raise HTTPException(status_code=400, detail="No posts found. Upload your LinkedIn archive first.")
+
+    count = body.count
+    if count is None or count >= len(posts):
+        # All posts included
+        db.table("raw_posts").update({"in_style": True}).eq("user_id", user_id).execute()
+        selected = len(posts)
+    else:
+        selected_ids    = [p["id"] for p in posts[:count]]
+        not_selected_ids = [p["id"] for p in posts[count:]]
+        db.table("raw_posts").update({"in_style": True}).in_("id", selected_ids).execute()
+        db.table("raw_posts").update({"in_style": False}).in_("id", not_selected_ids).execute()
+        selected = count
+
+    return {"status": "ok", "selected": selected}
+
+
 @router.post("/analyze")
 async def analyze_posts(
     background_tasks: BackgroundTasks,
@@ -60,6 +97,7 @@ async def analyze_posts(
     result = db.table("raw_posts") \
                .select("content, post_date") \
                .eq("user_id", user_id) \
+               .eq("in_style", True) \
                .order("post_date", desc=True, nullsfirst=False) \
                .execute()
 

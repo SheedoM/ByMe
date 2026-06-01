@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import UploadStep     from '../components/onboarding/UploadStep'
+import PostCountStep  from '../components/onboarding/PostCountStep'
 import ProcessingStep from '../components/onboarding/ProcessingStep'
 import ProviderStep   from '../components/onboarding/ProviderStep'
 import StyleReviewStep from '../components/onboarding/StyleReviewStep'
@@ -7,12 +8,14 @@ import LanguageToggle from '../components/ui/LanguageToggle'
 
 // Onboarding flow:
 // 1. upload      — user imports LinkedIn archive/CSV
-// 2. provider    — user chooses analysis method and starts extraction
-// 3. processing  — AI extracts style profile in background
-// 4. review      — user reviews extracted style profile
+// 2. post_count  — user picks how many posts to learn from
+// 3. provider    — user chooses analysis method and starts extraction
+// 4. processing  — AI extracts style profile in background
+// 5. review      — user reviews extracted style profile
 
 export default function Onboarding() {
   const [step, setStep] = useState('upload')
+  const [totalPosts, setTotalPosts] = useState(0)
 
   return (
     <div className="min-h-screen bg-paper flex flex-col px-6 py-8">
@@ -23,7 +26,12 @@ export default function Onboarding() {
 
       <main className="flex-1 flex items-center justify-center w-full">
         <div className="w-full max-w-2xl flex justify-center">
-          {step === 'upload'     && <UploadStep     onDone={() => setStep('provider')} />}
+          {step === 'upload' && (
+            <UploadStep onDone={(count) => { setTotalPosts(count); setStep('post_count') }} />
+          )}
+          {step === 'post_count' && (
+            <PostCountStep totalPosts={totalPosts} onDone={() => setStep('provider')} />
+          )}
           {step === 'provider'   && <ProviderStep   onDone={() => setStep('processing')} />}
           {step === 'processing' && <ProcessingStep onDone={() => setStep('review')} />}
           {step === 'review'     && <StyleReviewStep />}

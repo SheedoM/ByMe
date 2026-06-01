@@ -112,21 +112,19 @@ def parse_linkedin_posts_file(file_content: bytes, filename: str = "") -> dict:
 
     if name.endswith(".zip"):
         _, shares_csv = _find_shares_csv_in_zip(file_content)
-        usable_posts = _parse_all_usable_shares_csv(shares_csv)
-        posts = usable_posts[:MAX_POSTS_FOR_ANALYSIS]
+        posts = _parse_all_usable_shares_csv(shares_csv)
         return {
             "posts": posts,
             "import_source": "linkedin_zip",
-            "usable_posts_found": len(usable_posts),
+            "usable_posts_found": len(posts),
             "posts_used": len(posts),
         }
 
-    usable_posts = _parse_all_usable_shares_csv(file_content)
-    posts = usable_posts[:MAX_POSTS_FOR_ANALYSIS]
+    posts = _parse_all_usable_shares_csv(file_content)
     return {
         "posts": posts,
         "import_source": "linkedin_csv",
-        "usable_posts_found": len(usable_posts),
+        "usable_posts_found": len(posts),
         "posts_used": len(posts),
     }
 

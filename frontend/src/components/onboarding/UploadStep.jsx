@@ -37,9 +37,8 @@ export default function UploadStep({ onDone }) {
     try {
       const { data } = await uploadPosts(file)
       const found = data.usable_posts_found ?? data.posts_found
-      const used = data.posts_used ?? data.posts_found
-      setSummary(t('importSummary', { found, used }))
-      setTimeout(onDone, 900)
+      setSummary(t('importSummary', { found, used: found }))
+      setTimeout(() => onDone(found), 900)
     } catch (e) {
       setError(e.response?.data?.detail || (e.request ? t('uploadNetworkError') : t('uploadGenericError')))
     } finally {

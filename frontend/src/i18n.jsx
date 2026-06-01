@@ -41,7 +41,14 @@ const translations = {
     uploadFileTypeError: 'Please upload a LinkedIn data archive .zip, Shares .csv, or analytics .xlsx file.',
     uploadNetworkError: 'Cannot reach the ByMe API. Make sure the backend is running on localhost:8000.',
     uploadGenericError: 'Upload failed. Please try again.',
-    importSummary: 'Found {found} usable posts. We will analyze the {used} most recent posts for a fast, focused style profile.',
+    importSummary: 'Found {found} usable posts. Choose how many to learn from on the next step.',
+
+    postCountTitle: 'How many posts should ByMe learn from?',
+    postCountCopy: 'We found {total} posts in your export. ByMe will learn from the most recent posts you select — newer posts usually reflect your current writing style best.',
+    postCountMostRecent: '{n} most recent',
+    postCountAll: 'All {n} posts',
+    postCountContinue: 'Continue',
+    postCountSelecting: 'Saving selection...',
 
     providerTitle: 'Choose analysis method',
     providerCopy: 'Pick how ByMe should analyze your writing style before we build your profile.',
@@ -212,7 +219,14 @@ const translations = {
     uploadFileTypeError: 'يرجى رفع أرشيف LinkedIn بصيغة .zip أو ملف Shares بصيغة .csv أو ملف تحليلات .xlsx.',
     uploadNetworkError: 'تعذر الاتصال بواجهة ByMe البرمجية. تأكد أن الخادم الخلفي يعمل على localhost:8000.',
     uploadGenericError: 'فشل الرفع. يرجى المحاولة مرة أخرى.',
-    importSummary: 'وجدنا {found} منشورًا صالحًا. سنحلل أحدث {used} منشورًا لبناء ملف أسلوب سريع ومركّز.',
+    importSummary: 'وجدنا {found} منشورًا صالحًا. ستختار عدد المنشورات للتعلم منها في الخطوة التالية.',
+
+    postCountTitle: 'كم منشورًا تريد أن يتعلم منه ByMe؟',
+    postCountCopy: 'وجدنا {total} منشورًا في ملفك. سيتعلم ByMe من أحدث المنشورات التي تختارها — المنشورات الأحدث عادةً تعكس أسلوبك الحالي بشكل أفضل.',
+    postCountMostRecent: 'أحدث {n} منشور',
+    postCountAll: 'كل المنشورات ({n})',
+    postCountContinue: 'متابعة',
+    postCountSelecting: 'جارٍ حفظ الاختيار...',
 
     providerTitle: 'اختر طريقة التحليل',
     providerCopy: 'اختر كيف تريد أن يحلل ByMe أسلوبك قبل بناء ملفك.',
