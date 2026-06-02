@@ -6,7 +6,7 @@ from .gemini import GeminiProvider
 
 
 # Valid provider names for BYOK
-VALID_PROVIDERS = {"claude", "openai", "gemini"}
+VALID_PROVIDERS = {"claude", "openai", "gemini", "openrouter"}
 
 # Valid models per provider
 VALID_MODELS: dict[str, list[str]] = {
@@ -24,6 +24,11 @@ VALID_MODELS: dict[str, list[str]] = {
         "gemini-2.0-flash",
         "gemini-2.5-flash",
         "gemini-2.0-flash-lite",
+    ],
+    "openrouter": [
+        "google/gemini-2.0-flash-exp:free",
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "mistralai/mistral-7b-instruct:free",
     ],
 }
 
@@ -64,3 +69,10 @@ def create_provider(
         return OpenAIProvider(api_key=api_key, model=model)
     elif provider_name == "gemini":
         return GeminiProvider(api_key=api_key, model=model)
+    elif provider_name == "openrouter":
+        default_model = model or VALID_MODELS["openrouter"][0]
+        return OpenAIProvider(
+            api_key=api_key,
+            model=default_model,
+            base_url="https://openrouter.ai/api/v1"
+        )

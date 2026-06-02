@@ -112,9 +112,19 @@ async def get_providers_catalog():
                 "label": "Google Gemini",
                 "key_placeholder": "AIza...",
                 "models": [
-                    {"id": "gemini-2.0-flash",   "label": "Gemini 2.0 Flash (Recommended)"},
-                    {"id": "gemini-2.5-flash",   "label": "Gemini 2.5 Flash (Latest)"},
-                    {"id": "gemini-2.0-flash-lite", "label": "Gemini 2.0 Flash Lite (Fast)"},
+                    {"id": "gemini-2.0-flash",      "label": "Gemini 2.0 Flash (Recommended)"},
+                    {"id": "gemini-2.5-flash",      "label": "Gemini 2.5 Flash (Latest)"},
+                    {"id": "gemini-2.0-flash-lite",  "label": "Gemini 2.0 Flash Lite (Fast)"},
+                ],
+            },
+            {
+                "id": "openrouter",
+                "label": "OpenRouter (Free models)",
+                "key_placeholder": "sk-or-...",
+                "models": [
+                    {"id": "google/gemini-2.0-flash-exp:free",        "label": "Gemini 2.0 Flash (Free)"},
+                    {"id": "meta-llama/llama-3.3-70b-instruct:free",  "label": "Llama 3.3 70B (Free)"},
+                    {"id": "mistralai/mistral-7b-instruct:free",       "label": "Mistral 7B (Free)"},
                 ],
             },
         ]

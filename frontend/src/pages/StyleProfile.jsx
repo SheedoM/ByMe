@@ -2,6 +2,7 @@ import { useState } from 'react'
 import AppNav from '../components/layout/AppNav'
 import StyleCard from '../components/profile/StyleCard'
 import StyleEditor from '../components/profile/StyleEditor'
+import ExportStyleProfile from '../components/profile/ExportStyleProfile'
 import { useStyleProfile } from '../hooks/useStyleProfile'
 import Spinner from '../components/ui/Spinner'
 import Button from '../components/ui/Button'
@@ -44,7 +45,10 @@ export default function StyleProfile() {
             onSaved={() => { refresh(); setEditing(false) }}
           />
         ) : (
-          <StyleCard profile={profile} />
+          <>
+            <StyleCard profile={profile} />
+            {profile && <ExportStyleProfile />}
+          </>
         )}
       </main>
     </div>

@@ -8,14 +8,14 @@ import { useLanguage } from '../../i18n'
 
 export default function ProviderStep({ onDone }) {
   const { t } = useLanguage()
-  const [choice,    setChoice]    = useState(null)      // null | 'free' | 'byok'
-  const [catalog,   setCatalog]   = useState([])
-  const [provider,  setProvider]  = useState('')
-  const [model,     setModel]     = useState('')
-  const [apiKey,    setApiKey]    = useState('')
-  const [saving,    setSaving]    = useState(false)
+  const [choice,         setChoice]         = useState(null)   // 'free' | 'freekey' | 'byok'
+  const [catalog,        setCatalog]        = useState([])
+  const [provider,       setProvider]       = useState('')
+  const [model,          setModel]          = useState('')
+  const [apiKey,         setApiKey]         = useState('')
+  const [saving,         setSaving]         = useState(false)
   const [loadingCatalog, setLoadingCatalog] = useState(true)
-  const [error,     setError]     = useState('')
+  const [error,          setError]          = useState('')
 
   useEffect(() => {
     getProvidersCatalog()
@@ -24,12 +24,17 @@ export default function ProviderStep({ onDone }) {
       .finally(() => setLoadingCatalog(false))
   }, [])
 
-  // When provider changes, auto-select first model
+  // Auto-select first model when provider changes
   useEffect(() => {
     if (!provider) return
     const p = catalog.find((c) => c.id === provider)
     if (p?.models?.length) setModel(p.models[0].id)
   }, [provider, catalog])
+
+  // Auto-select OpenRouter when free-key card is chosen
+  useEffect(() => {
+    if (choice === 'freekey') setProvider('openrouter')
+  }, [choice])
 
   const handleFree = async () => {
     setSaving(true)
@@ -45,17 +50,17 @@ export default function ProviderStep({ onDone }) {
     }
   }
 
-  const handleBYOK = async () => {
+  const handleKey = async () => {
     if (!provider) { setError(t('providerRequired')); return }
     if (!apiKey.trim()) { setError(t('apiKeyRequired')); return }
     setSaving(true)
     setError('')
     try {
       await saveProviderSettings({
-        plan_type:    'byok',
-        byok_provider: provider,
-        byok_model:    model,
-        byok_api_key:  apiKey,
+        plan_type:     'byok',
+        byok_provider:  provider,
+        byok_model:     model,
+        byok_api_key:   apiKey,
       })
       await analyzeStyle()
       onDone()
@@ -67,6 +72,15 @@ export default function ProviderStep({ onDone }) {
   }
 
   const selectedProviderData = catalog.find((c) => c.id === provider)
+  const openRouterData       = catalog.find((c) => c.id === 'openrouter')
+  const paidProviders        = catalog.filter((c) => c.id !== 'openrouter')
+
+  const cardClass = (id) => `
+    text-left p-6 rounded-2xl border-2 transition-all duration-200 w-full
+    ${choice === id
+      ? 'border-amber bg-amber-light/30 shadow-sm'
+      : 'border-border bg-paper hover:border-muted hover:bg-surface/40'}
+  `
 
   return (
     <div className="w-full max-w-2xl animate-slide-up">
@@ -77,18 +91,10 @@ export default function ProviderStep({ onDone }) {
         {t('providerCopy')}
       </p>
 
-      <div className="grid sm:grid-cols-2 gap-4 mb-6">
-        {/* ── Free tier card ── */}
-        <button
-          id="plan-free"
-          onClick={() => setChoice('free')}
-          className={`
-            text-left p-6 rounded-2xl border-2 transition-all duration-200
-            ${choice === 'free'
-              ? 'border-amber bg-amber-light/30 shadow-sm'
-              : 'border-border bg-paper hover:border-muted hover:bg-surface/40'}
-          `}
-        >
+      <div className="flex flex-col gap-4 mb-6">
+
+        {/* ── Card 1: Try ByMe ── */}
+        <button id="plan-free" onClick={() => setChoice('free')} className={cardClass('free')}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-2xl">⚡</span>
             {choice === 'free' && (
@@ -98,33 +104,35 @@ export default function ProviderStep({ onDone }) {
             )}
           </div>
           <h3 className="font-medium text-ink mb-1">{t('freeAnalysis')}</h3>
-          <p className="text-xs text-muted leading-relaxed mb-3">
-            {t('freeAnalysisDesc')}
-          </p>
+          <p className="text-xs text-muted leading-relaxed mb-3">{t('freeAnalysisDesc')}</p>
           <ul className="text-xs text-muted space-y-1">
-            <li className="flex items-center gap-1.5">
-              <span className="text-emerald-deep">✓</span> 10 posts/month
-            </li>
-            <li className="flex items-center gap-1.5">
-              <span className="text-emerald-deep">✓</span> {t('noSetup')}
-            </li>
-            <li className="flex items-center gap-1.5">
-              <span className="text-emerald-deep">✓</span> {t('goodStart')}
-            </li>
+            <li className="flex items-center gap-1.5"><span className="text-emerald-deep">✓</span> {t('freeAnalysisBullet1')}</li>
+            <li className="flex items-center gap-1.5"><span className="text-emerald-deep">✓</span> {t('freeAnalysisBullet2')}</li>
+            <li className="flex items-center gap-1.5"><span className="text-emerald-deep">✓</span> {t('freeAnalysisBullet3')}</li>
           </ul>
         </button>
 
-        {/* ── BYOK card ── */}
-        <button
-          id="plan-byok"
-          onClick={() => setChoice('byok')}
-          className={`
-            text-left p-6 rounded-2xl border-2 transition-all duration-200
-            ${choice === 'byok'
-              ? 'border-amber bg-amber-light/30 shadow-sm'
-              : 'border-border bg-paper hover:border-muted hover:bg-surface/40'}
-          `}
-        >
+        {/* ── Card 2: Free API key (OpenRouter) ── */}
+        <button id="plan-freekey" onClick={() => setChoice('freekey')} className={cardClass('freekey')}>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-2xl">🎁</span>
+            {choice === 'freekey' && (
+              <span className="text-xs font-medium text-amber bg-amber-light border border-amber/30 px-2 py-0.5 rounded-full">
+                {t('selected')}
+              </span>
+            )}
+          </div>
+          <h3 className="font-medium text-ink mb-1">{t('freeKeyAnalysis')}</h3>
+          <p className="text-xs text-muted leading-relaxed mb-3">{t('freeKeyAnalysisDesc')}</p>
+          <ul className="text-xs text-muted space-y-1">
+            <li className="flex items-center gap-1.5"><span className="text-emerald-deep">✓</span> {t('freeKeyBullet1')}</li>
+            <li className="flex items-center gap-1.5"><span className="text-emerald-deep">✓</span> {t('freeKeyBullet2')}</li>
+            <li className="flex items-center gap-1.5"><span className="text-emerald-deep">✓</span> {t('freeKeyBullet3')}</li>
+          </ul>
+        </button>
+
+        {/* ── Card 3: Paid API key ── */}
+        <button id="plan-byok" onClick={() => setChoice('byok')} className={cardClass('byok')}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-2xl">🔑</span>
             {choice === 'byok' && (
@@ -134,37 +142,73 @@ export default function ProviderStep({ onDone }) {
             )}
           </div>
           <h3 className="font-medium text-ink mb-1">{t('byokAnalysis')}</h3>
-          <p className="text-xs text-muted leading-relaxed mb-3">
-            {t('byokAnalysisDesc')}
-          </p>
+          <p className="text-xs text-muted leading-relaxed mb-3">{t('byokAnalysisDesc')}</p>
           <ul className="text-xs text-muted space-y-1">
-            <li className="flex items-center gap-1.5">
-              <span className="text-emerald-deep">✓</span> {t('unlimitedPosts')}
-            </li>
-            <li className="flex items-center gap-1.5">
-              <span className="text-emerald-deep">✓</span> {t('chooseModel')}
-            </li>
-            <li className="flex items-center gap-1.5">
-              <span className="text-emerald-deep">✓</span> {t('yourDataKey')}
-            </li>
+            <li className="flex items-center gap-1.5"><span className="text-emerald-deep">✓</span> {t('unlimitedPosts')}</li>
+            <li className="flex items-center gap-1.5"><span className="text-emerald-deep">✓</span> {t('chooseModel')}</li>
+            <li className="flex items-center gap-1.5"><span className="text-emerald-deep">✓</span> {t('yourDataKey')}</li>
           </ul>
         </button>
       </div>
 
-      {/* ── BYOK configuration (shown when byok selected) ── */}
+      {/* ── OpenRouter guided wizard ── */}
+      {choice === 'freekey' && (
+        <div className="bg-surface/60 border border-border rounded-2xl p-6 mb-6 animate-slide-up space-y-4">
+          <ol className="text-sm text-muted space-y-2">
+            <li>{t('openRouterStep1')}</li>
+            <li>{t('openRouterStep2')}</li>
+            <li>{t('openRouterStep3')}</li>
+          </ol>
+          <a
+            href="https://openrouter.ai/keys"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-sm font-medium text-amber hover:underline"
+          >
+            {t('getOpenRouterKey')}
+          </a>
+
+          {/* Model selector */}
+          {loadingCatalog ? (
+            <div className="flex justify-center py-2"><Spinner /></div>
+          ) : openRouterData && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted uppercase tracking-wide">{t('model')}</label>
+              <select
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                className="w-full bg-paper border border-border rounded-xl px-4 py-2.5 text-sm text-ink focus:outline-none focus:border-amber transition-colors"
+              >
+                {openRouterData.models.map((m) => (
+                  <option key={m.id} value={m.id}>{m.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <Input
+            id="freekey-api-key"
+            label={t('apiKey')}
+            type="password"
+            placeholder={openRouterData?.key_placeholder || 'sk-or-...'}
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            hint={t('apiKeyHint')}
+          />
+        </div>
+      )}
+
+      {/* ── Paid BYOK config ── */}
       {choice === 'byok' && (
         <div className="bg-surface/60 border border-border rounded-2xl p-6 mb-6 animate-slide-up space-y-4">
           {loadingCatalog ? (
             <div className="flex justify-center py-4"><Spinner /></div>
           ) : (
             <>
-              {/* Provider selector */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-medium text-muted uppercase tracking-wide">
-                  {t('aiProvider')}
-                </label>
+                <label className="text-xs font-medium text-muted uppercase tracking-wide">{t('aiProvider')}</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {catalog.map((p) => (
+                  {paidProviders.map((p) => (
                     <button
                       key={p.id}
                       id={`provider-${p.id}`}
@@ -182,12 +226,9 @@ export default function ProviderStep({ onDone }) {
                 </div>
               </div>
 
-              {/* Model selector */}
               {provider && selectedProviderData && (
                 <div className="flex flex-col gap-1.5 animate-fade-in">
-                  <label className="text-xs font-medium text-muted uppercase tracking-wide">
-                    {t('model')}
-                  </label>
+                  <label className="text-xs font-medium text-muted uppercase tracking-wide">{t('model')}</label>
                   <select
                     id="byok-model"
                     value={model}
@@ -201,7 +242,6 @@ export default function ProviderStep({ onDone }) {
                 </div>
               )}
 
-              {/* API Key input */}
               {provider && (
                 <Input
                   id="byok-api-key"
@@ -226,25 +266,18 @@ export default function ProviderStep({ onDone }) {
         </p>
       )}
 
-      {/* CTA */}
+      {/* CTAs */}
       {choice === 'free' && (
-        <Button
-          id="btn-continue-free"
-          onClick={handleFree}
-          loading={saving}
-          fullWidth
-          size="lg"
-        >
+        <Button id="btn-continue-free" onClick={handleFree} loading={saving} fullWidth size="lg">
           {t('analyzeFree')} →
         </Button>
       )}
-
-      {choice === 'byok' && (
+      {(choice === 'freekey' || choice === 'byok') && (
         <Button
-          id="btn-save-byok"
-          onClick={handleBYOK}
+          id="btn-save-key"
+          onClick={handleKey}
           loading={saving}
-          disabled={!provider || !apiKey.trim()}
+          disabled={!apiKey.trim()}
           fullWidth
           size="lg"
         >
@@ -253,9 +286,7 @@ export default function ProviderStep({ onDone }) {
       )}
 
       {choice && (
-        <p className="text-center text-xs text-muted mt-4">
-          {t('changeAnytime')}
-        </p>
+        <p className="text-center text-xs text-muted mt-4">{t('changeAnytime')}</p>
       )}
     </div>
   )

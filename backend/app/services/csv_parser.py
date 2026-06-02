@@ -71,11 +71,13 @@ def _parse_all_usable_shares_csv(csv_content: bytes) -> List[dict]:
         if len(text.split()) < MIN_WORD_COUNT:
             continue
 
-        post_date = _parse_post_date(row.get('Date', ''))
+        post_date   = _parse_post_date(row.get('Date', ''))
+        share_link  = row.get('ShareLink', '').strip()
 
         posts.append({
-            'content':   text[:MAX_CHARS_PER_POST],
-            'post_date': post_date,
+            'content':    text[:MAX_CHARS_PER_POST],
+            'post_date':  post_date,
+            'share_link': share_link or None,
         })
 
     # Sort by date descending — most recent first

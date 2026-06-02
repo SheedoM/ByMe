@@ -7,6 +7,9 @@ export const uploadPosts = (file) => {
 }
 
 export const selectPostCount    = (count) => api.post('/style/select', { count })
+export const selectPostIds      = (ids)   => api.post('/style/select', { ids })
+export const getRawPosts        = ()      => api.get('/style/posts')
+export const exportStyleProfile = ()      => api.get('/style/export')
 export const getStyleStatus     = () => api.get('/style/status')
 export const analyzeStyle       = () => api.post('/style/analyze')
 export const getStyleProfile    = () => api.get('/style/profile')
