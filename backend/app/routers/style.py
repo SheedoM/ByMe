@@ -238,20 +238,26 @@ async def upload_analytics(
 
     matched = 0
     for row in analytics_rows:
-        score = row["likes"] + row["comments"] * 2 + row["reposts"] * 3
+        # LinkedIn exports total engagements (likes + comments + reposts combined).
+        # Use it directly; fall back to impressions if engagements not available.
+        score = row.get("engagements") or row.get("impressions") or 0
 
-        # Try URL match first
+        # NOTE: Analytics URLs use urn:li:activity: while Shares CSV uses
+        # urn:li:share: — the IDs differ, so URL matching is unreliable.
+        # Date is the primary matching key.
         post_id = None
-        if row.get("post_url"):
-            post_id = url_index.get(_normalise_url(row["post_url"]))
 
-        # Fallback: date match
-        if post_id is None and row.get("post_date"):
+        # 1. Try date match (most reliable for this export format)
+        if row.get("post_date"):
             post_id = date_index.get(str(row["post_date"])[:10])
+
+        # 2. Try URL match as secondary (may work if formats happen to align)
+        if post_id is None and row.get("post_url"):
+            post_id = url_index.get(_normalise_url(row["post_url"]))
 
         if post_id:
             db.table("raw_posts") \
-              .update({"engagement_score": score}) \
+              .update({"engagement_score": int(score)}) \
               .eq("id", post_id) \
               .execute()
             matched += 1

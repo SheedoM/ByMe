@@ -262,15 +262,39 @@ def get_picker_candidates(db_posts: List[dict]) -> List[dict]:
 # LinkedIn Analytics Excel parser
 # ---------------------------------------------------------------------------
 
+def _parse_analytics_date(raw) -> "datetime.date | None":
+    """Parse a date value from openpyxl — handles datetime objects and strings."""
+    if raw is None:
+        return None
+    if hasattr(raw, "date"):          # datetime/date object from openpyxl
+        return raw.date() if hasattr(raw, "hour") else raw
+    s = str(raw).strip()
+    for fmt in ("%m/%d/%Y", "%Y-%m-%d", "%d/%m/%Y", "%Y/%m/%d", "%m-%d-%Y"):
+        try:
+            return datetime.strptime(s[:10], fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
 def parse_linkedin_analytics_excel(content: bytes) -> List[dict]:
     """
     Parse a LinkedIn Creator Analytics export (.xlsx).
-    Returns a list of dicts: {post_url, post_date, likes, comments, reposts, impressions}.
 
-    LinkedIn's analytics Excel typically has columns (exact names vary by locale):
-      "Post publish date" | "Post URL" or "Post link"
-      "Impressions" | "Likes" | "Comments" | "Reposts" or "Shares"
-    We try several name variants to be robust.
+    LinkedIn exports a workbook with multiple sheets.  The relevant data is
+    on the "TOP POSTS" sheet, which has two side-by-side tables:
+      • Columns 0-2: top-50 by Engagements  (Post URL | Post publish date | Engagements)
+      • Columns 4-6: top-50 by Impressions  (Post URL | Post publish date | Impressions)
+
+    The header row is row index 2 (0-based); row 0 is a disclaimer.
+    Data rows start at index 3.
+
+    NOTE: The analytics URLs use  urn:li:activity:  while the Shares CSV uses
+    urn:li:share: — the numeric IDs differ, so URL matching is unreliable.
+    Date-based matching is used as the primary strategy downstream.
+
+    Returns a list of dicts:
+        {post_url, post_date, engagements, impressions}
     """
     try:
         import openpyxl
@@ -281,94 +305,136 @@ def parse_linkedin_analytics_excel(content: bytes) -> List[dict]:
         )
 
     try:
-        wb = openpyxl.load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+        wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
     except Exception:
-        raise ValueError("Could not read the Excel file. Make sure you uploaded the LinkedIn Analytics export.")
+        raise ValueError(
+            "Could not read the Excel file. "
+            "Make sure you uploaded the LinkedIn Analytics export (.xlsx)."
+        )
 
-    ws = wb.active
-    rows = list(ws.iter_rows(values_only=True))
-    if not rows:
-        raise ValueError("The analytics file appears to be empty.")
+    # ── Locate the TOP POSTS sheet (case-insensitive) ──────────────────────
+    target_ws = None
+    for name in wb.sheetnames:
+        if "top" in name.lower() and "post" in name.lower():
+            target_ws = wb[name]
+            break
 
-    # Find header row (first row with recognisable column names)
+    if target_ws is None:
+        # Fallback: try any sheet that has "Post URL" in it
+        for name in wb.sheetnames:
+            ws = wb[name]
+            for row in ws.iter_rows(min_row=1, max_row=5, values_only=True):
+                if any("post url" in str(c).lower() for c in row if c):
+                    target_ws = ws
+                    break
+            if target_ws:
+                break
+
+    if target_ws is None:
+        raise ValueError(
+            "Could not find post analytics data in this Excel file. "
+            "Upload the file downloaded from LinkedIn → Analytics → "
+            "Content → Export (the one with a 'TOP POSTS' sheet)."
+        )
+
+    rows = list(target_ws.iter_rows(values_only=True))
+
+    # ── Find the header row ────────────────────────────────────────────────
+    # LinkedIn's format: row 0 = disclaimer, row 1 = empty, row 2 = headers
     header_row_idx = None
-    headers: List[str] = []
     for i, row in enumerate(rows):
-        row_strs = [str(c).strip().lower() if c is not None else "" for c in row]
-        if any("post" in s or "impression" in s or "like" in s for s in row_strs):
+        cells_lower = [str(c).strip().lower() for c in row if c is not None]
+        if any("post url" in c or "publish date" in c for c in cells_lower):
             header_row_idx = i
-            headers = row_strs
             break
 
     if header_row_idx is None:
         raise ValueError(
-            "Could not find the analytics data in this Excel file. "
-            "Make sure you downloaded the LinkedIn Creator Analytics export "
-            "from linkedin.com/analytics/creator/posts/."
+            "Could not find the header row in the TOP POSTS sheet. "
+            "The file format may have changed — please re-download from LinkedIn Analytics."
         )
 
-    def find_col(*variants: str) -> int | None:
+    headers = [str(c).strip().lower() if c is not None else "" for c in rows[header_row_idx]]
+
+    # ── Map column indices ─────────────────────────────────────────────────
+    # Left table (engagements): cols 0, 1, 2
+    # Right table (impressions): cols 4, 5, 6  (col 3 is a blank spacer)
+    def find_col(start: int, end: int, *variants: str) -> int | None:
         for v in variants:
-            for idx, h in enumerate(headers):
-                if v in h:
+            for idx in range(start, min(end, len(headers))):
+                if v in headers[idx]:
                     return idx
         return None
 
-    col_url      = find_col("post url", "post link", "url", "link")
-    col_date     = find_col("publish date", "post date", "date")
-    col_likes    = find_col("like", "reaction")
-    col_comments = find_col("comment")
-    col_reposts  = find_col("repost", "share")
-    col_impr     = find_col("impression", "view")
+    # Left block
+    col_url_l   = find_col(0, 4, "post url", "url", "link")
+    col_date_l  = find_col(0, 4, "publish date", "post date", "date")
+    col_engage  = find_col(0, 4, "engagement")
 
-    if col_url is None and col_date is None:
+    # Right block
+    col_url_r   = find_col(4, len(headers), "post url", "url", "link")
+    col_date_r  = find_col(4, len(headers), "publish date", "post date", "date")
+    col_impr    = find_col(4, len(headers), "impression")
+
+    if col_date_l is None and col_date_r is None:
         raise ValueError(
-            "Could not identify post URL or date columns in this file. "
-            "This may not be a LinkedIn post analytics export."
+            "Could not identify date columns in the TOP POSTS sheet. "
+            "Please re-download the analytics export from LinkedIn."
         )
 
-    results: List[dict] = []
+    def safe_int(v) -> int:
+        try:
+            return int(float(str(v))) if v not in (None, "") else 0
+        except (ValueError, TypeError):
+            return 0
+
+    # ── Parse both tables and merge by URL / date ──────────────────────────
+    # Key: normalised URL or ISO date string  →  result dict
+    merged: dict[str, dict] = {}
+
     for row in rows[header_row_idx + 1:]:
         if not any(row):
             continue
 
         def cell(idx):
-            if idx is None or idx >= len(row):
-                return None
-            return row[idx]
+            return row[idx] if idx is not None and idx < len(row) else None
 
-        raw_url  = str(cell(col_url) or "").strip()
-        raw_date = cell(col_date)
+        # Left table entry
+        if col_date_l is not None:
+            url_l  = str(cell(col_url_l) or "").strip()
+            date_l = _parse_analytics_date(cell(col_date_l))
+            eng    = safe_int(cell(col_engage))
+            key = url_l or (str(date_l) if date_l else None)
+            if key:
+                entry = merged.setdefault(key, {"post_url": url_l or None,
+                                                 "post_date": date_l,
+                                                 "engagements": 0,
+                                                 "impressions": 0})
+                entry["engagements"] = eng
+                if url_l and not entry["post_url"]:
+                    entry["post_url"] = url_l
+                if date_l and not entry["post_date"]:
+                    entry["post_date"] = date_l
 
-        # Parse date
-        post_date = None
-        if raw_date:
-            if hasattr(raw_date, "date"):       # datetime object from openpyxl
-                post_date = raw_date.date()
-            else:
-                for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%Y/%m/%d"):
-                    try:
-                        post_date = datetime.strptime(str(raw_date)[:10], fmt).date()
-                        break
-                    except ValueError:
-                        continue
+        # Right table entry
+        if col_date_r is not None:
+            url_r  = str(cell(col_url_r) or "").strip()
+            date_r = _parse_analytics_date(cell(col_date_r))
+            impr   = safe_int(cell(col_impr))
+            key = url_r or (str(date_r) if date_r else None)
+            if key:
+                entry = merged.setdefault(key, {"post_url": url_r or None,
+                                                 "post_date": date_r,
+                                                 "engagements": 0,
+                                                 "impressions": 0})
+                entry["impressions"] = impr
+                if url_r and not entry["post_url"]:
+                    entry["post_url"] = url_r
+                if date_r and not entry["post_date"]:
+                    entry["post_date"] = date_r
 
-        def safe_int(v) -> int:
-            try:
-                return int(float(str(v))) if v not in (None, "") else 0
-            except (ValueError, TypeError):
-                return 0
-
-        results.append({
-            "post_url":    raw_url or None,
-            "post_date":   post_date,
-            "likes":       safe_int(cell(col_likes)),
-            "comments":    safe_int(cell(col_comments)),
-            "reposts":     safe_int(cell(col_reposts)),
-            "impressions": safe_int(cell(col_impr)),
-        })
-
+    results = list(merged.values())
     if not results:
-        raise ValueError("No analytics rows found in the file.")
+        raise ValueError("No post data found in the TOP POSTS sheet.")
 
     return results
