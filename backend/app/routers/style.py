@@ -2,7 +2,12 @@ from fastapi import APIRouter, UploadFile, BackgroundTasks, HTTPException, Depen
 from pydantic import BaseModel
 from ..config import get_supabase
 from ..middleware.auth import get_current_user
-from ..services.csv_parser import parse_linkedin_posts_file, validate_posts_file
+from ..services.csv_parser import (
+    parse_linkedin_posts_file,
+    validate_posts_file,
+    get_picker_candidates,
+    parse_linkedin_analytics_excel,
+)
 from ..services.style_extractor import extract_and_store_style
 
 router = APIRouter()
@@ -164,25 +169,104 @@ async def get_profile(user_id: str = Depends(get_current_user)):
 
 @router.get("/posts")
 async def get_raw_posts(user_id: str = Depends(get_current_user)):
-    """Return all raw posts for the user (id, preview, share_link, date, in_style)."""
+    """
+    Return a curated subset of raw posts for the picker UI.
+    If engagement scores exist, sorted by score desc.
+    Otherwise a smart pre-filter: original, substantial, spread across time.
+    """
     db = get_supabase()
     result = db.table("raw_posts") \
-               .select("id, content, share_link, post_date, in_style") \
+               .select("id, content, share_link, post_date, in_style, engagement_score") \
                .eq("user_id", user_id) \
                .order("post_date", desc=True, nullsfirst=False) \
                .execute()
-    posts = result.data or []
-    # Return a preview (first 200 chars) rather than full content
+    all_posts = result.data or []
+
+    candidates = get_picker_candidates(all_posts)
+
     return [
         {
-            "id":         p["id"],
-            "preview":    (p["content"] or "")[:200],
-            "share_link": p.get("share_link"),
-            "post_date":  p.get("post_date"),
-            "in_style":   p.get("in_style", True),
+            "id":               p["id"],
+            "preview":          (p.get("content") or "")[:200],
+            "share_link":       p.get("share_link"),
+            "post_date":        p.get("post_date"),
+            "in_style":         p.get("in_style", True),
+            "engagement_score": p.get("engagement_score"),
         }
-        for p in posts
+        for p in candidates
     ]
+
+
+@router.post("/analytics-upload")
+async def upload_analytics(
+    file: UploadFile,
+    user_id: str = Depends(get_current_user),
+):
+    """
+    Parse a LinkedIn Creator Analytics Excel export and update
+    engagement_score on matching raw_posts rows.
+    Matching: first by share_link URL, then by post_date as fallback.
+    """
+    content = await file.read()
+    filename = (file.filename or "").lower()
+    if not (filename.endswith(".xlsx") or filename.endswith(".xls")):
+        raise HTTPException(
+            status_code=400,
+            detail="Please upload the LinkedIn Analytics Excel file (.xlsx)."
+        )
+
+    try:
+        analytics_rows = parse_linkedin_analytics_excel(content)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    db = get_supabase()
+    posts_result = db.table("raw_posts") \
+                     .select("id, share_link, post_date") \
+                     .eq("user_id", user_id) \
+                     .execute()
+    db_posts = posts_result.data or []
+
+    # Build lookup indexes
+    url_index: dict[str, str]  = {}   # normalised_url -> post_id
+    date_index: dict[str, str] = {}   # date_str -> post_id (last wins if dup)
+    for p in db_posts:
+        if p.get("share_link"):
+            url_index[_normalise_url(p["share_link"])] = p["id"]
+        if p.get("post_date"):
+            date_index[str(p["post_date"])[:10]] = p["id"]
+
+    matched = 0
+    for row in analytics_rows:
+        score = row["likes"] + row["comments"] * 2 + row["reposts"] * 3
+
+        # Try URL match first
+        post_id = None
+        if row.get("post_url"):
+            post_id = url_index.get(_normalise_url(row["post_url"]))
+
+        # Fallback: date match
+        if post_id is None and row.get("post_date"):
+            post_id = date_index.get(str(row["post_date"])[:10])
+
+        if post_id:
+            db.table("raw_posts") \
+              .update({"engagement_score": score}) \
+              .eq("id", post_id) \
+              .execute()
+            matched += 1
+
+    return {
+        "status":  "ok",
+        "matched": matched,
+        "total":   len(analytics_rows),
+    }
+
+
+def _normalise_url(url: str) -> str:
+    """Strip trailing slashes and URL-decode for consistent comparison."""
+    from urllib.parse import unquote
+    return unquote(url.rstrip("/").strip().lower())
 
 
 @router.get("/export")
