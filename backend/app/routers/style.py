@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, BackgroundTasks, HTTPException, Depends
 from pydantic import BaseModel
-from ..config import get_supabase
+from ..config import get_supabase, MAX_UPLOAD_BYTES
 from ..middleware.auth import get_current_user
 from ..services.csv_parser import (
     parse_linkedin_posts_file,
@@ -11,6 +11,27 @@ from ..services.csv_parser import (
 from ..services.style_extractor import extract_and_store_style
 
 router = APIRouter()
+
+
+async def _read_capped(file: UploadFile) -> bytes:
+    """
+    Read an uploaded file into memory, but refuse anything over MAX_UPLOAD_BYTES.
+    Reads in chunks so a huge file can't OOM the server before we reject it.
+    """
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await file.read(1024 * 1024)  # 1 MB at a time
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > MAX_UPLOAD_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Maximum allowed size is {MAX_UPLOAD_BYTES // (1024 * 1024)} MB.",
+            )
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 class SelectPostsRequest(BaseModel):
@@ -36,7 +57,7 @@ async def upload_posts(
     background_tasks: BackgroundTasks,
     user_id: str = Depends(get_current_user),
 ):
-    content = await file.read()
+    content = await _read_capped(file)
 
     # Validate and import the user-provided LinkedIn export.
     is_valid, error_msg = validate_posts_file(content, file.filename or "")
@@ -219,13 +240,13 @@ async def upload_analytics(
     engagement_score on matching raw_posts rows.
     Matching: first by share_link URL, then by post_date as fallback.
     """
-    content = await file.read()
     filename = (file.filename or "").lower()
     if not (filename.endswith(".xlsx") or filename.endswith(".xls")):
         raise HTTPException(
             status_code=400,
             detail="Please upload the LinkedIn Analytics Excel file (.xlsx)."
         )
+    content = await _read_capped(file)
 
     try:
         analytics_rows = parse_linkedin_analytics_excel(content)

@@ -3,10 +3,14 @@ from pydantic import BaseModel
 from datetime import datetime, timezone
 from ..config import get_supabase
 from ..middleware.auth import get_current_user
+from ..middleware.rate_limit import rate_limit
 from ..services.post_generator import generate_post
 from ..services.hook_generator import generate_hooks
 
 router = APIRouter()
+
+# Cap LLM-backed endpoints: 30 calls / 5 min per user (covers hooks + generate).
+llm_rate_limit = rate_limit(max_calls=30, window_seconds=300)
 
 
 class GenerateRequest(BaseModel):
@@ -32,7 +36,7 @@ class FinalPostRequest(BaseModel):
 @router.post("/")
 async def generate(
     request: GenerateRequest,
-    user_id: str = Depends(get_current_user)
+    user_id: str = Depends(llm_rate_limit)
 ):
     db = get_supabase()
 
@@ -60,7 +64,7 @@ async def generate(
 @router.post("/hooks")
 async def generate_hook_variants(
     request: HooksRequest,
-    user_id: str = Depends(get_current_user)
+    user_id: str = Depends(llm_rate_limit)
 ):
     """Generate 3 opening hook options. Does not count against generation quota."""
     db = get_supabase()

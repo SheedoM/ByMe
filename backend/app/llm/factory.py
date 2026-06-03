@@ -1,4 +1,4 @@
-from ..config import OPENROUTER_API_KEY
+from ..config import OPENROUTER_API_KEY, FREE_TIER_MODEL
 from .base import BaseLLMProvider
 from .claude import ClaudeProvider
 from .openai_provider import OpenAIProvider
@@ -35,15 +35,16 @@ VALID_MODELS: dict[str, list[str]] = {
 
 def get_free_tier_provider() -> BaseLLMProvider:
     """
-    Returns an OpenRouter provider using completely free models.
+    Returns an OpenRouter provider using a genuinely free model.
+    The model id is configurable via FREE_TIER_MODEL (defaults to a :free model)
+    so the platform's trial never silently bills a paid model.
     """
     if not OPENROUTER_API_KEY:
         raise RuntimeError("OPENROUTER_API_KEY is not set. Cannot serve free tier users.")
 
-    # Using a free model via OpenRouter (use a stable OpenRouter model id)
     return OpenAIProvider(
         api_key=OPENROUTER_API_KEY,
-        model="gpt-4o-mini",
+        model=FREE_TIER_MODEL,
         base_url="https://openrouter.ai/api/v1"
     )
 

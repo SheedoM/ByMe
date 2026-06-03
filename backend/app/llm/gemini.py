@@ -1,5 +1,6 @@
 from google import genai
 from .base import BaseLLMProvider, LLMResponse
+from ..config import LLM_TIMEOUT_SECONDS, LLM_MAX_TOKENS
 import os
 
 
@@ -14,8 +15,11 @@ class GeminiProvider(BaseLLMProvider):
         key = api_key or os.getenv("GOOGLE_API_KEY")
         if not key:
             raise ValueError("Gemini requires an API key. Set GOOGLE_API_KEY or pass api_key.")
-        self._client = genai.Client(api_key=key)
-        self._model_name = model or "gemini-1.5-flash"
+        self._client = genai.Client(
+            api_key=key,
+            http_options=genai.types.HttpOptions(timeout=int(LLM_TIMEOUT_SECONDS * 1000)),
+        )
+        self._model_name = model or "gemini-2.0-flash"
 
     async def generate(
         self,
@@ -31,6 +35,7 @@ class GeminiProvider(BaseLLMProvider):
             contents=contents,
             config=genai.types.GenerateContentConfig(
                 temperature=temperature,
+                max_output_tokens=LLM_MAX_TOKENS,
             ),
         )
 

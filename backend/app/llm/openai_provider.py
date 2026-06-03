@@ -1,13 +1,14 @@
 import os
 from openai import AsyncOpenAI
 from .base import BaseLLMProvider, LLMResponse
+from ..config import LLM_TIMEOUT_SECONDS, LLM_MAX_TOKENS
 
 
 class OpenAIProvider(BaseLLMProvider):
 
     def __init__(self, api_key: str | None = None, model: str | None = None, base_url: str | None = None):
         key = api_key or os.getenv("OPENAI_API_KEY")
-        kwargs = {"api_key": key}
+        kwargs = {"api_key": key, "timeout": LLM_TIMEOUT_SECONDS, "max_retries": 1}
         if base_url:
             kwargs["base_url"] = base_url
         self.client = AsyncOpenAI(**kwargs)
@@ -22,6 +23,7 @@ class OpenAIProvider(BaseLLMProvider):
         response = await self.client.chat.completions.create(
             model=self._model,
             temperature=temperature,
+            max_tokens=LLM_MAX_TOKENS,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user",   "content": user_prompt}

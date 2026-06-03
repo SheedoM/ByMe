@@ -14,11 +14,30 @@ api.interceptors.request.use(async (config) => {
   return config
 })
 
-// Global error handler — just reject, let callers handle errors.
-// Do NOT sign out or hard-redirect on 401; that causes redirect loops.
+// On 401: try refreshing the session once and retry. If refresh fails, the
+// session is genuinely dead — sign out and send the user to login (once).
 api.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject(error)
+  async (error) => {
+    const original = error.config
+    const status = error.response?.status
+
+    if (status === 401 && original && !original._retried) {
+      original._retried = true
+      const { data, error: refreshError } = await supabase.auth.refreshSession()
+      if (!refreshError && data?.session?.access_token) {
+        original.headers.Authorization = `Bearer ${data.session.access_token}`
+        return api(original)
+      }
+      // Refresh failed — dead session. Sign out and redirect (avoid loop on /login).
+      await supabase.auth.signOut()
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.assign('/login')
+      }
+    }
+
+    return Promise.reject(error)
+  }
 )
 
 export default api
