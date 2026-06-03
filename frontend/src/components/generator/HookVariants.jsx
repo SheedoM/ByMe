@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { generateHooks } from '../../services/generate'
 import Spinner from '../ui/Spinner'
 import { useLanguage } from '../../i18n'
+import { getTextDirection } from '../../utils/textDirection'
 
 export default function HookVariants({ topic, keyPoints, selectedHook, onSelect }) {
   const { t } = useLanguage()
@@ -46,7 +47,7 @@ export default function HookVariants({ topic, keyPoints, selectedHook, onSelect 
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-medium text-amber-dark mb-1">{t('hookSelected')}</p>
-            <p className="text-sm text-ink leading-relaxed">{selectedHook}</p>
+            <p dir={getTextDirection(selectedHook)} className="text-sm text-ink leading-relaxed">{selectedHook}</p>
           </div>
           <button
             type="button"
@@ -111,6 +112,7 @@ export default function HookVariants({ topic, keyPoints, selectedHook, onSelect 
               key={i}
               type="button"
               onClick={() => handleSelect(hook)}
+              dir={getTextDirection(hook)}
               className={`w-full text-left text-sm px-4 py-3 rounded-xl border transition-all ${
                 selectedHook === hook
                   ? 'border-amber bg-amber-light/30 text-ink'
@@ -118,12 +120,9 @@ export default function HookVariants({ topic, keyPoints, selectedHook, onSelect 
               }`}
             >
               <span className="flex items-start gap-3">
-                <span className="text-xs text-muted mt-0.5">{i + 1}.</span>
+                <span className="text-xs text-muted mt-0.5 shrink-0" dir="ltr">{i + 1}.</span>
                 <span className="flex-1 leading-relaxed">{hook}</span>
               </span>
-              {selectedHook === hook && (
-                <span className="mt-2 inline-flex text-xs text-amber font-medium">✓ {t('hookSelected')}</span>
-              )}
             </button>
           ))}
         </div>

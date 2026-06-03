@@ -203,7 +203,8 @@ const translations = {
     historyCopy: 'Review your generated and saved final posts, then copy them when you need them.',
     historyLoadError: 'Could not load your post history.',
     historyEmpty: 'Generated posts will appear here after you write your first post.',
-    historyFinalVersion: 'Final version',
+    historyFinalVersion: 'Final',
+    historySearch: 'Search posts…',
     historyAiDraft: 'AI draft',
 
     settingsTitle: 'Settings',
@@ -456,7 +457,8 @@ const translations = {
     historyCopy: 'راجع المنشورات التي تم إنشاؤها والنسخ النهائية المحفوظة، وانسخها عند الحاجة.',
     historyLoadError: 'تعذر تحميل سجل المنشورات.',
     historyEmpty: 'ستظهر المنشورات التي تنشئها هنا بعد كتابة أول منشور.',
-    historyFinalVersion: 'النسخة النهائية',
+    historyFinalVersion: 'نهائي',
+    historySearch: 'ابحث في المنشورات…',
     historyAiDraft: 'مسودة الذكاء الاصطناعي',
 
     settingsTitle: 'الإعدادات',
