@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { generatePost } from '../services/generate'
 
-const GENERATOR_STORAGE_KEY = 'byme_generator_state'
+const STORAGE_KEY = 'byme_generator_state'
 
-function loadGeneratorState() {
+function loadState() {
   if (typeof window === 'undefined') return {}
   try {
-    const raw = window.localStorage.getItem(GENERATOR_STORAGE_KEY)
+    const raw = window.localStorage.getItem(STORAGE_KEY)
     return raw ? JSON.parse(raw) : {}
   } catch {
     return {}
@@ -14,40 +14,33 @@ function loadGeneratorState() {
 }
 
 export function useGenerator() {
-  const [savedState] = useState(loadGeneratorState)
-  const [topic,        setTopic]        = useState(savedState.topic || '')
-  const [keyPoints,    setKeyPoints]    = useState(
-    Array.isArray(savedState.keyPoints) && savedState.keyPoints.length
-      ? savedState.keyPoints
-      : ['']
-  )
-  const [postType,     setPostType]     = useState(savedState.postType || 'story')
-  const [selectedHook, setSelectedHook] = useState(null)
-  const [output,       setOutput]       = useState(savedState.output || '')
-  const [postId,       setPostId]       = useState(savedState.postId || null)
+  const [saved]        = useState(loadState)
+  const [idea,         setIdea]         = useState(saved.idea || '')
+  const [postType,     setPostType]     = useState(saved.postType || 'story')
+  const [selectedHook, setSelectedHook] = useState(null)   // never persisted
+  const [output,       setOutput]       = useState(saved.output || '')
+  const [postId,       setPostId]       = useState(saved.postId || null)
   const [loading,      setLoading]      = useState(false)
   const [error,        setError]        = useState(null)
 
+  // Persist to localStorage on change (selectedHook/loading/error are transient)
   useEffect(() => {
     if (typeof window === 'undefined') return
     window.localStorage.setItem(
-      GENERATOR_STORAGE_KEY,
-      JSON.stringify({ topic, keyPoints, postType, output, postId })
+      STORAGE_KEY,
+      JSON.stringify({ idea, postType, output, postId })
     )
-  }, [topic, keyPoints, postType, output, postId])
+  }, [idea, postType, output, postId])
 
   const generate = async () => {
-    if (!topic.trim()) return
-    const points = keyPoints.filter((p) => p.trim())
-    if (!points.length) return
-
+    if (!idea.trim() || !selectedHook) return
     setLoading(true)
     setError(null)
     setPostId(null)
     try {
       const { data } = await generatePost({
-        topic,
-        key_points:    points,
+        topic:         idea,
+        key_points:    [],
         post_type:     postType,
         selected_hook: selectedHook,
       })
@@ -55,27 +48,36 @@ export function useGenerator() {
       setPostId(data.id)
       return data
     } catch (e) {
-      const msg = e.response?.data?.detail || 'Something went wrong. Please try again.'
-      setError(msg)
+      setError(e.response?.data?.detail || 'Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  // When user picks a hook variant — clear it when they change topic
-  const handleTopicChange = (val) => {
-    setTopic(val)
+  const clearAll = () => {
+    setIdea('')
     setSelectedHook(null)
+    setOutput('')
+    setPostId(null)
+    setError(null)
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(STORAGE_KEY)
+    }
+  }
+
+  // Clear hook when idea changes significantly (user is starting fresh)
+  const handleIdeaChange = (val) => {
+    setIdea(val)
+    if (!val.trim()) setSelectedHook(null)
   }
 
   return {
-    topic, setTopic: handleTopicChange,
-    keyPoints, setKeyPoints,
-    postType, setPostType,
+    idea,        setIdea: handleIdeaChange,
+    postType,    setPostType,
     selectedHook, setSelectedHook,
-    output, setOutput,
+    output,      setOutput,
     postId,
     loading, error,
-    generate,
+    generate, clearAll,
   }
 }

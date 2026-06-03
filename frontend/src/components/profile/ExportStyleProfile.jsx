@@ -32,7 +32,7 @@ export default function ExportStyleProfile({ isOpen, onClose }) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2500)
     } catch {
-      setError('Copy failed — try the download button instead.')
+      setError('Copy failed — try downloading instead.')
     }
   }
 
@@ -50,23 +50,21 @@ export default function ExportStyleProfile({ isOpen, onClose }) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t('exportTitle')} maxWidth="max-w-lg">
-      <div className="space-y-4">
+      <div className="space-y-5">
         <p className="text-sm text-muted leading-relaxed">{t('exportCopy')}</p>
-        <p className="text-sm text-muted leading-relaxed">{t('exportCopy2')}</p>
 
         {/* How-to steps */}
-        <div className="bg-surface/60 rounded-2xl p-4 space-y-2">
-          <p className="text-xs font-medium text-muted uppercase tracking-wide mb-3">How to use it</p>
+        <div className="bg-surface/60 rounded-2xl p-4 space-y-3">
+          <p className="text-xs font-medium text-muted uppercase tracking-wide">How to use</p>
           {[
-            { n: '1', text: 'Download or copy the prompt package below.' },
-            { n: '2', text: 'Open ChatGPT, Claude, or Gemini.' },
-            { n: '3', text: 'Paste the SYSTEM PROMPT as your custom instruction or at the start of the conversation.' },
-            { n: '4', text: 'Use the included POST TEMPLATE to generate posts in your voice.' },
-          ].map(({ n, text }) => (
-            <div key={n} className="flex gap-3 text-sm text-muted">
+            'Paste the SYSTEM PROMPT as a Custom Instruction in ChatGPT, a Project instruction in Claude, or at the start of any conversation in Gemini.',
+            'Each time you want a new post, use the included POST TEMPLATE — fill in your idea and post type.',
+            'The system prompt is reusable. You only need to paste it once per conversation or project.',
+          ].map((text, i) => (
+            <div key={i} className="flex gap-3 text-sm text-muted">
               <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber/20 text-amber text-xs
                                flex items-center justify-center font-medium mt-0.5">
-                {n}
+                {i + 1}
               </span>
               <span className="leading-relaxed">{text}</span>
             </div>
@@ -79,24 +77,28 @@ export default function ExportStyleProfile({ isOpen, onClose }) {
           </p>
         )}
 
-        <div className="flex gap-3 pt-1">
-          <Button
-            onClick={handleCopy}
-            loading={loading && !copied}
-            disabled={loading}
-            fullWidth
-          >
-            {copied ? t('exportCopied') : (loading ? t('exportGenerating') : t('exportCopyBtn'))}
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={handleDownload}
-            loading={loading}
-            disabled={loading}
-            fullWidth
-          >
-            {t('exportDownloadBtn')}
-          </Button>
+        {/* Unified copy/download — same content, two delivery options */}
+        <div className="space-y-3">
+          <p className="text-xs text-muted">{t('exportSameContent')}</p>
+          <div className="flex gap-3">
+            <Button
+              onClick={handleCopy}
+              loading={loading && !copied}
+              disabled={loading}
+              fullWidth
+            >
+              {copied ? t('exportCopied') : (loading ? t('exportGenerating') : t('exportCopyBtn'))}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleDownload}
+              loading={loading}
+              disabled={loading}
+              fullWidth
+            >
+              {t('exportDownloadBtn')}
+            </Button>
+          </div>
         </div>
       </div>
     </Modal>

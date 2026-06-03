@@ -364,35 +364,8 @@ THEIR VOICE:
 REAL EXAMPLES FROM THEIR POSTS:{examples_block}
 Write only the post. No explanation, no preamble, no title."""
 
-    post_template = """Write a LinkedIn post about:
-
-Topic: [YOUR TOPIC HERE]
-Key points:
-- [KEY POINT 1]
-- [KEY POINT 2]
-- [KEY POINT 3]
+    post_template = """Describe your post idea here — what you want to say, key points, examples, anything that matters.
 Post type: [story / lesson / hot take / observation / update]"""
-
-    instructions = """HOW TO USE THIS PROMPT PACKAGE
-═══════════════════════════════
-
-CHATGPT:
-1. Go to chatgpt.com and open a new chat
-2. Click Settings → Personalization → Custom Instructions
-   Paste the SYSTEM PROMPT into the first box
-   OR simply paste the system prompt at the start of any conversation
-3. Then send the POST TEMPLATE filled in with your topic
-
-CLAUDE (claude.ai):
-1. Go to claude.ai → create a new Project
-2. In the Project instructions, paste the SYSTEM PROMPT
-3. Use the POST TEMPLATE in your messages inside that project
-
-GEMINI:
-1. Go to gemini.google.com
-2. Paste the SYSTEM PROMPT first, then immediately follow with the POST TEMPLATE
-
-TIP: The system prompt is reusable — just send a new POST TEMPLATE each time you want a new post."""
 
     full_package = f"""╔══════════════════════════════════════╗
 ║       YOUR BYME STYLE PROFILE        ║
@@ -412,19 +385,11 @@ SECTION 2 — POST TEMPLATE
 {'═' * 42}
 
 {post_template}
-
-
-{'═' * 42}
-SECTION 3 — HOW TO USE
-{'═' * 42}
-
-{instructions}
 """
 
     return {
         "system_prompt":  system_prompt,
         "post_template":  post_template,
-        "instructions":   instructions,
         "full_package":   full_package,
     }
 

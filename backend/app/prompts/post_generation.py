@@ -49,12 +49,9 @@ Write only the post. No explanation, no preamble, no title.
 """
 
 GENERATION_USER = """
-Write a LinkedIn post about the following:
+Write a LinkedIn post based on this idea:
 
-Topic: {topic}
-
-Key points to include:
-{key_points}
+{idea}
 """
 
 

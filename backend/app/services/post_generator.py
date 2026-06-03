@@ -168,8 +168,14 @@ async def generate_post(
         hook_constraint=hook_constraint,
     )
 
-    key_points_str = "\n".join(f"- {point}" for point in key_points)
-    user_prompt = GENERATION_USER.format(topic=topic, key_points=key_points_str)
+    # Combine topic/idea and optional key points into a single idea block
+    if key_points and any(p.strip() for p in key_points):
+        idea = topic + "\n\nKey points to cover:\n" + "\n".join(
+            f"- {p}" for p in key_points if p.strip()
+        )
+    else:
+        idea = topic
+    user_prompt = GENERATION_USER.format(idea=idea)
 
     # 6. Call LLM
     try:
