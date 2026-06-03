@@ -75,18 +75,18 @@ export default function OutputPanel({ output, loading, providerInfo, postId }) {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col gap-4">
       <textarea
         value={draft}
         onChange={(e) => { setDraft(e.target.value); setSaveMessage(''); setSaveError('') }}
         dir={getTextDirection(draft)}
-        className="flex-1 bg-paper border border-border rounded-2xl p-6 post-output post-editor text-ink leading-relaxed min-h-[300px] overflow-y-auto scrollbar-thin resize-none focus:outline-none focus:border-amber transition-colors"
+        className="w-full bg-paper border border-border rounded-2xl p-6 post-output post-editor text-ink leading-relaxed min-h-[300px] overflow-y-auto scrollbar-thin resize-none focus:outline-none focus:border-amber transition-colors"
       />
 
-      {/* Footer */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4">
+      {/* Footer — always inside the panel */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         {providerInfo && (
-          <span className="text-xs text-muted">
+          <span className="text-xs text-muted shrink-0">
             {providerInfo.plan_type === 'free'
               ? `⚡ ${t('freeAnalysis')}`
               : `🔑 ${providerInfo.provider} · ${providerInfo.model}`}
@@ -117,8 +117,8 @@ export default function OutputPanel({ output, loading, providerInfo, postId }) {
         </div>
       </div>
 
-      {saveMessage && <p className="mt-3 text-xs text-emerald-deep">{saveMessage}</p>}
-      {saveError && <p className="mt-3 text-xs text-red-500">{saveError}</p>}
+      {saveMessage && <p className="text-xs text-emerald-deep">{saveMessage}</p>}
+      {saveError   && <p className="text-xs text-red-500">{saveError}</p>}
     </div>
   )
 }
