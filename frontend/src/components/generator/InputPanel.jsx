@@ -51,15 +51,20 @@ export default function InputPanel({
         </div>
       )}
 
+      {/* Hint shown when inputs are filled but no hook selected yet */}
+      {!selectedHook && topic.trim() && keyPoints.some((p) => p.trim()) && (
+        <p className="text-xs text-muted text-center">{t('hooksRequired')}</p>
+      )}
+
       <Button
         id="btn-generate"
         onClick={onGenerate}
         loading={loading}
-        disabled={!topic.trim() || keyPoints.every((p) => !p.trim())}
+        disabled={!topic.trim() || keyPoints.every((p) => !p.trim()) || !selectedHook}
         fullWidth
         size="lg"
       >
-        {loading ? t('generating') : selectedHook ? `${t('writeFromHook')} →` : t('writeMyPost')}
+        {loading ? t('generating') : `${t('writeFromHook')} →`}
       </Button>
     </div>
   )
