@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { supabase } from './supabaseClient'
+import { buildLoginRedirect } from '../utils/authRedirect'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -22,17 +23,23 @@ api.interceptors.response.use(
     const original = error.config
     const status = error.response?.status
 
-    if (status === 401 && original && !original._retried) {
-      original._retried = true
-      const { data, error: refreshError } = await supabase.auth.refreshSession()
-      if (!refreshError && data?.session?.access_token) {
-        original.headers.Authorization = `Bearer ${data.session.access_token}`
-        return api(original)
+    if (status === 401 && original) {
+      if (!original._retried) {
+        original._retried = true
+        const { data, error: refreshError } = await supabase.auth.refreshSession()
+        if (!refreshError && data?.session?.access_token) {
+          original.headers = original.headers || {}
+          original.headers.Authorization = `Bearer ${data.session.access_token}`
+          return api(original)
+        }
       }
-      // Refresh failed — dead session. Sign out and redirect (avoid loop on /login).
+
+      // Refresh failed, or the refreshed token was still rejected by the API.
       await supabase.auth.signOut()
       if (!window.location.pathname.startsWith('/login')) {
-        window.location.assign('/login')
+        window.location.assign(
+          buildLoginRedirect(window.location.pathname, window.location.search, window.location.hash),
+        )
       }
     }
 

@@ -40,7 +40,7 @@ const translations = {
     uploadButton: 'Continue',
     uploadPrivacy: 'We only read your post text to build your style profile.',
     uploadFileTypeError: 'Please upload a LinkedIn data archive .zip, Shares .csv, or analytics .xlsx file.',
-    uploadNetworkError: 'Cannot reach the ByMe API. Make sure the backend is running on localhost:8005.',
+    uploadNetworkError: 'Cannot reach the ByMe API. Check that the backend URL is configured and the backend is running.',
     uploadGenericError: 'Upload failed. Please try again.',
     importSummary: 'Found {found} usable posts. Choose how many to learn from on the next step.',
 
@@ -294,7 +294,7 @@ const translations = {
     uploadButton: 'متابعة',
     uploadPrivacy: 'نقرأ نص منشوراتك فقط لبناء ملف أسلوبك.',
     uploadFileTypeError: 'يرجى رفع أرشيف LinkedIn بصيغة .zip أو ملف Shares بصيغة .csv أو ملف تحليلات .xlsx.',
-    uploadNetworkError: 'تعذر الاتصال بواجهة ByMe البرمجية. تأكد أن الخادم الخلفي يعمل على localhost:8005.',
+    uploadNetworkError: 'تعذر الاتصال بواجهة ByMe البرمجية. تأكد من إعداد رابط الخادم الخلفي وأن الخادم يعمل.',
     uploadGenericError: 'فشل الرفع. يرجى المحاولة مرة أخرى.',
     importSummary: 'وجدنا {found} منشورًا صالحًا. ستختار عدد المنشورات للتعلم منها في الخطوة التالية.',
 

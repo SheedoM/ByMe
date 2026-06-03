@@ -1,9 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { useAuth } from './context/AuthContext'
 import { LanguageProvider } from './i18n'
 import { AuthGuard } from './components/auth/AuthGuard'
 import { OnboardingGuard } from './components/auth/OnboardingGuard'
+import { getSafeRedirectPath } from './utils/authRedirect'
 
 import Landing      from './pages/Landing'
 import Login        from './pages/Login'
@@ -21,7 +22,10 @@ import Settings     from './pages/Settings'
  */
 function PublicRoute({ children }) {
   const { user } = useAuth()
-  if (user) return <Navigate to="/app" replace />
+  const location = useLocation()
+  const redirectTo = getSafeRedirectPath(new URLSearchParams(location.search).get('redirectTo'))
+
+  if (user) return <Navigate to={redirectTo} replace />
   return children
 }
 

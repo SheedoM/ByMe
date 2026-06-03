@@ -1,17 +1,21 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { signIn } from '../services/auth'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
 import LanguageToggle from '../components/ui/LanguageToggle'
 import { useLanguage } from '../i18n'
+import { getSafeRedirectPath } from '../utils/authRedirect'
 
 export default function Login() {
   const { t } = useLanguage()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
   const [error,    setError]    = useState('')
   const [loading,  setLoading]  = useState(false)
+  const redirectTo = getSafeRedirectPath(new URLSearchParams(location.search).get('redirectTo'))
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -23,9 +27,9 @@ export default function Login() {
     if (err) {
       setError(err.message)
       setLoading(false)
+    } else {
+      navigate(redirectTo, { replace: true })
     }
-    // On success: PublicRoute in App.jsx watches user state and navigates
-    // when onAuthStateChange fires — no navigate() call needed here.
   }
 
   return (
