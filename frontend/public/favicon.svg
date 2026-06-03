@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="byme-amber" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C47B35" />
+      <stop offset="100%" stop-color="#A36128" />
+    </linearGradient>
+  </defs>
+
+  <!-- Warm rounded tile in ByMe amber -->
+  <rect width="512" height="512" rx="116" fill="url(#byme-amber)" />
+
+  <!-- Serif "B" monogram in paper -->
+  <text x="50%" y="52%"
+        text-anchor="middle" dominant-baseline="central"
+        font-family="Fraunces, Georgia, 'Times New Roman', serif"
+        font-size="340" font-weight="600" fill="#F8F7F3">B</text>
+</svg>
