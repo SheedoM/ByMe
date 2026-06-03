@@ -74,8 +74,14 @@ export default function Generator() {
               {hasContent && (
                 <button
                   onClick={handleClear}
-                  className="text-xs text-muted hover:text-red-500 transition-colors underline underline-offset-2"
+                  title={t('clearAll')}
+                  className="flex items-center gap-1 text-xs text-muted border border-border
+                             rounded-lg px-2 py-1 hover:border-red-300 hover:text-red-500
+                             hover:bg-red-50 transition-all"
                 >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
                   {t('clearAll')}
                 </button>
               )}

@@ -23,7 +23,7 @@ export default function HookVariants({ topic, keyPoints, selectedHook, onSelect 
     setHooks([])
     onSelect(null)
     try {
-      const { data } = await generateHooks({ topic, key_points: points })
+      const { data } = await generateHooks({ topic, key_points: [] })
       setHooks(data.hooks || [])
     } catch {
       setError(t('hookError'))
