@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Button from '../ui/Button'
 import PostTypeSelector from './PostTypeSelector'
 import HookVariants from './HookVariants'
@@ -15,6 +15,8 @@ export default function InputPanel({
   const { t, locale } = useLanguage()
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef(null)
+  const ideaRef = useRef(idea)
+  useEffect(() => { ideaRef.current = idea }, [idea])
 
   const toggleVoice = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -41,7 +43,8 @@ export default function InputPanel({
         .map((r) => r[0].transcript)
         .join(' ')
       if (transcript) {
-        setIdea((prev) => prev ? prev + ' ' + transcript : transcript)
+        const current = ideaRef.current
+        setIdea(current ? current + ' ' + transcript : transcript)
       }
     }
 

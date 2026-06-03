@@ -14,8 +14,7 @@ export default function HookVariants({ topic, keyPoints, selectedHook, onSelect 
     setHooks((current) => current.includes(selectedHook) ? current : [selectedHook, ...current])
   }, [selectedHook])
 
-  const points = keyPoints.filter(p => p.trim())
-  const canGenerate = Boolean(topic.trim() && points.length)
+  const canGenerate = Boolean(topic.trim())
 
   const handleGenerate = async () => {
     if (!canGenerate) return
