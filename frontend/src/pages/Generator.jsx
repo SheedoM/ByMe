@@ -66,7 +66,7 @@ export default function Generator() {
         {/* Two-panel layout */}
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Input */}
-          <div className="bg-surface/40 border border-border rounded-2xl p-6">
+          <div className="bg-surface/40 border border-border rounded-2xl p-6 flex flex-col">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xs font-medium text-muted uppercase tracking-wide">
                 {t('yourInput')}
@@ -100,8 +100,8 @@ export default function Generator() {
           </div>
 
           {/* Output */}
-          <div className="bg-surface/40 border border-border rounded-2xl p-6">
-            <h2 className="text-xs font-medium text-muted uppercase tracking-wide mb-5">
+          <div className="bg-surface/40 border border-border rounded-2xl p-6 flex flex-col">
+            <h2 className="text-xs font-medium text-muted uppercase tracking-wide mb-5 shrink-0">
               {t('yourPost')}
             </h2>
             <OutputPanel

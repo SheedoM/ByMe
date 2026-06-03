@@ -51,7 +51,7 @@ export default function OutputPanel({ output, loading, providerInfo, postId }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-4">
+      <div className="flex flex-col flex-1 items-center justify-center min-h-[300px] gap-4">
         <Spinner size="lg" />
         <p className="text-sm text-muted animate-pulse">{t('writingVoice')}</p>
       </div>
@@ -60,7 +60,7 @@ export default function OutputPanel({ output, loading, providerInfo, postId }) {
 
   if (!output) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] gap-3 text-center px-8">
+      <div className="flex flex-col flex-1 items-center justify-center min-h-[300px] gap-3 text-center px-8">
         <div className="w-16 h-16 rounded-full bg-surface flex items-center justify-center text-2xl">
           ✍
         </div>
@@ -75,16 +75,16 @@ export default function OutputPanel({ output, loading, providerInfo, postId }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col flex-1 gap-4">
       <textarea
         value={draft}
         onChange={(e) => { setDraft(e.target.value); setSaveMessage(''); setSaveError('') }}
         dir={getTextDirection(draft)}
-        className="w-full bg-paper border border-border rounded-2xl p-6 post-output post-editor text-ink leading-relaxed min-h-[300px] overflow-y-auto scrollbar-thin resize-none focus:outline-none focus:border-amber transition-colors"
+        className="flex-1 w-full bg-paper border border-border rounded-2xl p-6 post-output post-editor text-ink leading-relaxed min-h-[300px] overflow-y-auto scrollbar-thin resize-none focus:outline-none focus:border-amber transition-colors"
       />
 
-      {/* Footer — always inside the panel */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      {/* Footer — pinned to bottom of panel */}
+      <div className="mt-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         {providerInfo && (
           <span className="text-xs text-muted shrink-0">
             {providerInfo.plan_type === 'free'
