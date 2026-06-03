@@ -6,7 +6,7 @@ import Input from '../ui/Input'
 import Spinner from '../ui/Spinner'
 import { useLanguage } from '../../i18n'
 
-export default function ProviderStep({ onDone }) {
+export default function ProviderStep({ onDone, skipAnalysis = false }) {
   const { t } = useLanguage()
   const [choice,         setChoice]         = useState(null)   // 'free' | 'freekey' | 'byok'
   const [catalog,        setCatalog]        = useState([])
@@ -41,7 +41,7 @@ export default function ProviderStep({ onDone }) {
     setError('')
     try {
       await saveProviderSettings({ plan_type: 'free' })
-      await analyzeStyle()
+      if (!skipAnalysis) await analyzeStyle()
       onDone()
     } catch (e) {
       setError(e.response?.data?.detail || 'Failed to save. Please try again.')
@@ -62,7 +62,7 @@ export default function ProviderStep({ onDone }) {
         byok_model:     model,
         byok_api_key:   apiKey,
       })
-      await analyzeStyle()
+      if (!skipAnalysis) await analyzeStyle()
       onDone()
     } catch (e) {
       setError(e.response?.data?.detail || 'Failed to save. Please check your key and try again.')
@@ -281,7 +281,7 @@ export default function ProviderStep({ onDone }) {
           fullWidth
           size="lg"
         >
-          {t('analyzeByok')} →
+          {skipAnalysis ? t('saveKeyContinue') : t('analyzeByok')} →
         </Button>
       )}
 

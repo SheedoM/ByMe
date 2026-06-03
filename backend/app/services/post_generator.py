@@ -1,5 +1,4 @@
 import os
-import random
 from datetime import date
 from supabase import Client
 from fastapi import HTTPException
@@ -19,6 +18,25 @@ def _format_style_examples(posts: list[dict]) -> str:
     if not posts:
         return "not available"
     return "\n\n---\n\n".join((post.get("content") or "")[:1200] for post in posts)
+
+
+def _select_style_examples(
+    raw_posts: list[dict],
+    final_posts: list[dict],
+    limit: int = 5,
+) -> list[dict]:
+    final_examples = [
+        {"content": post.get("final_output") or ""}
+        for post in final_posts[:3]
+        if (post.get("final_output") or "").strip()
+    ]
+    remaining = max(0, limit - len(final_examples))
+    raw_examples = [
+        {"content": post.get("content") or ""}
+        for post in raw_posts[:remaining]
+        if (post.get("content") or "").strip()
+    ]
+    return final_examples + raw_examples
 
 
 async def generate_post(
@@ -61,9 +79,20 @@ async def generate_post(
                         .select("content, post_date") \
                         .eq("user_id", user_id) \
                         .eq("in_style", True) \
+                        .order("post_date", desc=True, nullsfirst=False) \
+                        .limit(5) \
                         .execute()
     examples_pool = getattr(examples_result, "data", None) or []
-    style_examples = random.sample(examples_pool, min(5, len(examples_pool)))
+
+    finals_result = db.table("generated_posts") \
+                      .select("final_output, final_saved_at") \
+                      .eq("user_id", user_id) \
+                      .eq("final_in_style", True) \
+                      .order("final_saved_at", desc=True, nullsfirst=False) \
+                      .limit(3) \
+                      .execute()
+    final_examples = getattr(finals_result, "data", None) or []
+    style_examples = _select_style_examples(examples_pool, final_examples)
 
     # 2. Fetch user settings
     settings_result = db.table("user_settings") \

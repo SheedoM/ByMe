@@ -104,7 +104,7 @@ class LinkedInPostsParserTests(TestCase):
             ),
         )
 
-    def test_reports_usable_count_before_analysis_cap(self):
+    def test_reports_all_usable_posts_without_analysis_cap(self):
         rows = []
         for i in range(35):
             rows.append({
@@ -122,8 +122,8 @@ class LinkedInPostsParserTests(TestCase):
         result = parse_linkedin_posts_file(make_shares_csv(rows), "Shares_123.csv")
 
         self.assertEqual(result["usable_posts_found"], 35)
-        self.assertEqual(result["posts_used"], 30)
-        self.assertEqual(len(result["posts"]), 30)
+        self.assertEqual(result["posts_used"], 35)
+        self.assertEqual(len(result["posts"]), 35)
 
     def test_rejects_basic_linkedin_zip_without_shares_file_with_full_archive_guidance(self):
         archive = make_zip(

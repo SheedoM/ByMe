@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
+from datetime import datetime, timezone
 from ..config import get_supabase
 from ..middleware.auth import get_current_user
 from ..services.post_generator import generate_post
@@ -22,6 +23,10 @@ class HooksRequest(BaseModel):
 
 class FeedbackRequest(BaseModel):
     rating: str  # 'nailed_it' | 'almost' | 'not_quite'
+
+
+class FinalPostRequest(BaseModel):
+    final_output: str
 
 
 @router.post("/")
@@ -96,6 +101,30 @@ async def submit_feedback(
     return {"status": "saved"}
 
 
+@router.put("/{post_id}/final")
+async def save_final_post(
+    post_id: str,
+    request: FinalPostRequest,
+    user_id: str = Depends(get_current_user),
+):
+    final_output = request.final_output.strip()
+    if not final_output:
+        raise HTTPException(status_code=400, detail="Final post cannot be empty")
+
+    db = get_supabase()
+    db.table("generated_posts") \
+      .update({
+          "final_output": final_output,
+          "final_saved_at": datetime.now(timezone.utc).isoformat(),
+          "final_in_style": True,
+      }) \
+      .eq("id", post_id) \
+      .eq("user_id", user_id) \
+      .execute()
+
+    return {"status": "saved"}
+
+
 @router.get("/history")
 async def get_history(
     limit: int = 20,
@@ -103,12 +132,19 @@ async def get_history(
 ):
     db = get_supabase()
     result = db.table("generated_posts") \
-               .select("id, topic, output, provider_used, model_used, plan_type, created_at") \
+               .select(_history_select_fields()) \
                .eq("user_id", user_id) \
                .order("created_at", desc=True) \
                .limit(limit) \
                .execute()
     return result.data
+
+
+def _history_select_fields() -> str:
+    return (
+        "id, topic, output, final_output, final_saved_at, final_in_style, "
+        "provider_used, model_used, plan_type, created_at, feedback, post_type, selected_hook"
+    )
 
 
 @router.get("/usage")

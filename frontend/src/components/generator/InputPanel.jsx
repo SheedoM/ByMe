@@ -41,6 +41,7 @@ export default function InputPanel({
       <HookVariants
         topic={topic}
         keyPoints={keyPoints}
+        selectedHook={selectedHook}
         onSelect={setSelectedHook}
       />
 

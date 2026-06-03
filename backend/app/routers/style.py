@@ -18,6 +18,18 @@ class SelectPostsRequest(BaseModel):
     ids: list[str] | None = None    # explicit post IDs to mark in_style; overrides count
 
 
+class StarterProfileRequest(BaseModel):
+    language_style_notes: str
+    tone: str
+    formality_level: int
+    avg_post_length: int
+    structure_preference: str
+    paragraph_length: str
+    emoji_usage: str
+    storytelling_style: str | None = None
+    vocabulary_notes: str | None = None
+
+
 @router.post("/upload")
 async def upload_posts(
     file: UploadFile,
@@ -227,37 +239,22 @@ async def upload_analytics(
                      .execute()
     db_posts = posts_result.data or []
 
-    # Build lookup indexes
-    url_index: dict[str, str]  = {}   # normalised_url -> post_id
-    date_index: dict[str, str] = {}   # date_str -> post_id (last wins if dup)
-    for p in db_posts:
-        if p.get("share_link"):
-            url_index[_normalise_url(p["share_link"])] = p["id"]
-        if p.get("post_date"):
-            date_index[str(p["post_date"])[:10]] = p["id"]
+    # Clear previous scores so duplicate-date rows become NULL instead of
+    # retaining a stale score from an earlier analytics upload.
+    db.table("raw_posts") \
+      .update({"engagement_score": None}) \
+      .eq("user_id", user_id) \
+      .execute()
+
+    url_index, date_index = _build_analytics_indexes(db_posts)
 
     matched = 0
     for row in analytics_rows:
-        # LinkedIn exports total engagements (likes + comments + reposts combined).
-        # Use it directly; fall back to impressions if engagements not available.
-        score = row.get("engagements") or row.get("impressions") or 0
-
-        # NOTE: Analytics URLs use urn:li:activity: while Shares CSV uses
-        # urn:li:share: — the IDs differ, so URL matching is unreliable.
-        # Date is the primary matching key.
-        post_id = None
-
-        # 1. Try date match (most reliable for this export format)
-        if row.get("post_date"):
-            post_id = date_index.get(str(row["post_date"])[:10])
-
-        # 2. Try URL match as secondary (may work if formats happen to align)
-        if post_id is None and row.get("post_url"):
-            post_id = url_index.get(_normalise_url(row["post_url"]))
+        post_id = _match_analytics_post_id(row, url_index, date_index)
 
         if post_id:
             db.table("raw_posts") \
-              .update({"engagement_score": int(score)}) \
+              .update({"engagement_score": _analytics_score(row)}) \
               .eq("id", post_id) \
               .execute()
             matched += 1
@@ -273,6 +270,48 @@ def _normalise_url(url: str) -> str:
     """Strip trailing slashes and URL-decode for consistent comparison."""
     from urllib.parse import unquote
     return unquote(url.rstrip("/").strip().lower())
+
+
+def _build_analytics_indexes(db_posts: list[dict]) -> tuple[dict[str, str], dict[str, list[str]]]:
+    """Build URL and date indexes for analytics matching."""
+    url_index: dict[str, str] = {}
+    date_index: dict[str, list[str]] = {}
+    for post in db_posts:
+        if post.get("share_link"):
+            url_index[_normalise_url(post["share_link"])] = post["id"]
+        if post.get("post_date"):
+            date_key = str(post["post_date"])[:10]
+            date_index.setdefault(date_key, []).append(post["id"])
+    return url_index, date_index
+
+
+def _match_analytics_post_id(
+    row: dict,
+    url_index: dict[str, str],
+    date_index: dict[str, list[str]],
+) -> str | None:
+    """
+    Match analytics to a raw post.
+
+    Date matching is accepted only when the date points to exactly one post.
+    URL matching is a fallback because LinkedIn export URL formats may differ.
+    """
+    if row.get("post_date"):
+        candidates = date_index.get(str(row["post_date"])[:10], [])
+        if len(candidates) == 1:
+            return candidates[0]
+
+    if row.get("post_url"):
+        return url_index.get(_normalise_url(row["post_url"]))
+
+    return None
+
+
+def _analytics_score(row: dict):
+    """Use raw engagements directly, falling back only when the field is absent."""
+    if "engagements" in row and row.get("engagements") is not None:
+        return row.get("engagements")
+    return row.get("impressions") or 0
 
 
 @router.get("/export")
@@ -413,3 +452,54 @@ async def update_profile(
       .eq("user_id", user_id) \
       .execute()
     return {"status": "updated"}
+
+
+@router.post("/starter-profile")
+async def create_starter_profile(
+    request: StarterProfileRequest,
+    user_id: str = Depends(get_current_user),
+):
+    db = get_supabase()
+    db.table("style_profiles").upsert(
+        _build_starter_profile(user_id, request),
+        on_conflict="user_id",
+    ).execute()
+    return {"status": "ready"}
+
+
+def _build_starter_profile(user_id: str, request: StarterProfileRequest) -> dict:
+    tone = request.tone.strip() or "conversational"
+    language = request.language_style_notes.strip() or "Natural LinkedIn writing"
+    storytelling = (request.storytelling_style or "").strip() or "Explains ideas through practical context."
+    vocabulary = (request.vocabulary_notes or "").strip() or "Uses clear, direct wording."
+
+    return {
+        "user_id": user_id,
+        "status": "ready",
+        "tone": tone,
+        "formality_level": max(1, min(10, request.formality_level)),
+        "avg_post_length": max(40, request.avg_post_length),
+        "opening_patterns": [
+            "Open with the main idea in the user's natural voice.",
+            "Open with a practical moment or observation.",
+            "Open with a direct question or tension when it fits the topic.",
+        ],
+        "closing_patterns": [
+            "Close with a concise takeaway.",
+            "Close with a grounded reflection.",
+            "Close with a simple question when conversation is natural.",
+        ],
+        "emoji_usage": request.emoji_usage,
+        "structure_preference": request.structure_preference,
+        "paragraph_length": request.paragraph_length,
+        "storytelling_style": storytelling,
+        "vocabulary_notes": vocabulary,
+        "language_style_notes": language,
+        "raw_summary": (
+            "Manual starter profile. "
+            f"Write in a {tone} tone with {language}. "
+            f"Storytelling style: {storytelling} "
+            f"Vocabulary guidance: {vocabulary}"
+        ),
+        "posts_analyzed": 0,
+    }

@@ -1,9 +1,8 @@
-import os
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from ..config import get_supabase, ENCRYPTION_KEY
 from ..middleware.auth import get_current_user
-from ..services.encryption import encrypt_key
+from ..services.encryption import decrypt_key, encrypt_key
 from ..llm.factory import VALID_PROVIDERS, VALID_MODELS
 
 router = APIRouter()
@@ -31,11 +30,19 @@ async def get_provider_settings(user_id: str = Depends(get_current_user)):
                .execute()
 
     if not result.data:
-        return {"plan_type": "free", "byok_provider": None, "byok_model": None, "has_api_key": False}
+        return {
+            "plan_type": "free",
+            "byok_provider": None,
+            "byok_model": None,
+            "has_api_key": False,
+            "api_key_hint": None,
+        }
 
     data = dict(result.data)
-    has_key = bool(data.pop("byok_api_key_encrypted", None))
+    encrypted_key = data.pop("byok_api_key_encrypted", None)
+    has_key = bool(encrypted_key)
     data["has_api_key"] = has_key
+    data["api_key_hint"] = _api_key_hint(encrypted_key)
     return data
 
 
@@ -49,10 +56,22 @@ async def save_provider_settings(
         raise HTTPException(status_code=400, detail="plan_type must be 'free' or 'byok'")
 
     db = get_supabase()
+    existing_result = db.table("user_settings") \
+                        .select("byok_provider, byok_model, byok_api_key_encrypted") \
+                        .eq("user_id", user_id) \
+                        .maybe_single() \
+                        .execute()
+    existing_settings = getattr(existing_result, "data", None) or {}
+
     data: dict = {
         "user_id":   user_id,
         "plan_type": request.plan_type,
     }
+
+    if request.plan_type == "free" and existing_settings.get("byok_api_key_encrypted"):
+        data["byok_provider"] = existing_settings.get("byok_provider")
+        data["byok_model"] = existing_settings.get("byok_model")
+        data["byok_api_key_encrypted"] = existing_settings.get("byok_api_key_encrypted")
 
     if request.plan_type == "byok":
         if not request.byok_provider:
@@ -77,9 +96,44 @@ async def save_provider_settings(
             if not ENCRYPTION_KEY:
                 raise HTTPException(status_code=500, detail="Encryption not configured on server")
             data["byok_api_key_encrypted"] = encrypt_key(request.byok_api_key, ENCRYPTION_KEY)
+        elif not _can_reuse_saved_key(existing_settings, request.byok_provider):
+            raise HTTPException(
+                status_code=400,
+                detail="Please enter an API key for this provider."
+            )
+        else:
+            data["byok_api_key_encrypted"] = existing_settings["byok_api_key_encrypted"]
 
     db.table("user_settings").upsert(data).execute()
     return {"status": "saved", "plan_type": request.plan_type}
+
+
+def _api_key_hint(encrypted_key: str | None) -> str | None:
+    if not encrypted_key or not ENCRYPTION_KEY:
+        return None
+    try:
+        return _mask_api_key(decrypt_key(encrypted_key, ENCRYPTION_KEY))
+    except Exception:
+        return None
+
+
+def _mask_api_key(api_key: str | None) -> str | None:
+    if not api_key:
+        return None
+    cleaned = api_key.strip()
+    if not cleaned:
+        return None
+    if len(cleaned) <= 8:
+        return f"{cleaned[:2]}...{cleaned[-2:]}"
+    return f"{cleaned[:5]}...{cleaned[-4:]}"
+
+
+def _can_reuse_saved_key(existing_settings: dict, provider: str | None) -> bool:
+    return bool(
+        provider
+        and existing_settings.get("byok_api_key_encrypted")
+        and existing_settings.get("byok_provider") == provider
+    )
 
 
 @router.get("/providers-catalog")

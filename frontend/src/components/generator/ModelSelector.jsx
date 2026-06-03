@@ -9,7 +9,7 @@ export default function ModelSelector({ settings }) {
   if (settings.plan_type === 'free' || !settings.byok_provider) {
     return (
       <div className="flex items-center gap-2">
-        <Badge variant="amber">⚡ ByMe Free · Powered by Gemini</Badge>
+        <Badge variant="amber">⚡ {t('freeAnalysis')}</Badge>
         <Link
           to="/settings"
           className="text-xs text-muted underline underline-offset-2 hover:text-ink transition-colors"
@@ -24,6 +24,7 @@ export default function ModelSelector({ settings }) {
     claude: 'Claude',
     openai: 'OpenAI',
     gemini: 'Gemini',
+    openrouter: 'OpenRouter',
   }[settings.byok_provider] || settings.byok_provider
 
   const modelShort = settings.byok_model
@@ -32,7 +33,10 @@ export default function ModelSelector({ settings }) {
 
   return (
     <div className="flex items-center gap-2">
-      <Badge variant="ink">🔑 {providerLabel} · {modelShort}</Badge>
+      <Badge variant={settings.byok_provider === 'openrouter' ? 'amber' : 'ink'}>
+        {settings.byok_provider === 'openrouter' ? '🎁' : '🔑'}{' '}
+        {settings.byok_provider === 'openrouter' ? t('freeKeyAnalysis') : providerLabel} · {modelShort}
+      </Badge>
       <Link
         to="/settings"
         className="text-xs text-muted underline underline-offset-2 hover:text-ink transition-colors"

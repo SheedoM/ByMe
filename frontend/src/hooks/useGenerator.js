@@ -1,15 +1,40 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { generatePost } from '../services/generate'
 
+const GENERATOR_STORAGE_KEY = 'byme_generator_state'
+
+function loadGeneratorState() {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = window.localStorage.getItem(GENERATOR_STORAGE_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
 export function useGenerator() {
-  const [topic,        setTopic]        = useState('')
-  const [keyPoints,    setKeyPoints]    = useState([''])
-  const [postType,     setPostType]     = useState('story')
+  const [savedState] = useState(loadGeneratorState)
+  const [topic,        setTopic]        = useState(savedState.topic || '')
+  const [keyPoints,    setKeyPoints]    = useState(
+    Array.isArray(savedState.keyPoints) && savedState.keyPoints.length
+      ? savedState.keyPoints
+      : ['']
+  )
+  const [postType,     setPostType]     = useState(savedState.postType || 'story')
   const [selectedHook, setSelectedHook] = useState(null)
-  const [output,       setOutput]       = useState('')
-  const [postId,       setPostId]       = useState(null)
+  const [output,       setOutput]       = useState(savedState.output || '')
+  const [postId,       setPostId]       = useState(savedState.postId || null)
   const [loading,      setLoading]      = useState(false)
   const [error,        setError]        = useState(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem(
+      GENERATOR_STORAGE_KEY,
+      JSON.stringify({ topic, keyPoints, postType, output, postId })
+    )
+  }, [topic, keyPoints, postType, output, postId])
 
   const generate = async () => {
     if (!topic.trim()) return
