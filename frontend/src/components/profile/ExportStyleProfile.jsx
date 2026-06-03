@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { exportStyleProfile } from '../../services/style'
+import Modal from '../ui/Modal'
 import Button from '../ui/Button'
 import { useLanguage } from '../../i18n'
 
-export default function ExportStyleProfile() {
+export default function ExportStyleProfile({ isOpen, onClose }) {
   const { t } = useLanguage()
-  const [loading,   setLoading]   = useState(false)
-  const [copied,    setCopied]    = useState(false)
-  const [error,     setError]     = useState('')
+  const [loading, setLoading] = useState(false)
+  const [copied,  setCopied]  = useState(false)
+  const [error,   setError]   = useState('')
 
   const fetchPackage = async () => {
     setLoading(true)
@@ -31,7 +32,7 @@ export default function ExportStyleProfile() {
       setCopied(true)
       setTimeout(() => setCopied(false), 2500)
     } catch {
-      setError('Copy failed — try the download button instead.')
+      setError('Copy failed — try downloading instead.')
     }
   }
 
@@ -48,37 +49,58 @@ export default function ExportStyleProfile() {
   }
 
   return (
-    <div className="mt-8 p-6 bg-surface/40 border border-border rounded-2xl">
-      <h2 className="font-medium text-ink mb-1">{t('exportTitle')}</h2>
-      <p className="text-xs text-muted leading-relaxed mb-1">{t('exportCopy')}</p>
-      <p className="text-xs text-muted leading-relaxed mb-5">{t('exportCopy2')}</p>
+    <Modal isOpen={isOpen} onClose={onClose} title={t('exportTitle')} maxWidth="max-w-lg">
+      <div className="space-y-5">
+        <p className="text-sm text-muted leading-relaxed">{t('exportCopy')}</p>
 
-      {error && (
-        <p className="mb-4 text-sm text-red-500 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-          {error}
-        </p>
-      )}
+        {/* How-to steps */}
+        <div className="bg-surface/60 rounded-2xl p-4 space-y-3">
+          <p className="text-xs font-medium text-muted uppercase tracking-wide">How to use</p>
+          {[
+            'Paste the SYSTEM PROMPT as a Custom Instruction in ChatGPT, a Project instruction in Claude, or at the start of any conversation in Gemini.',
+            'Each time you want a new post, use the included POST TEMPLATE — fill in your idea and post type.',
+            'The system prompt is reusable. You only need to paste it once per conversation or project.',
+          ].map((text, i) => (
+            <div key={i} className="flex gap-3 text-sm text-muted">
+              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber/20 text-amber text-xs
+                               flex items-center justify-center font-medium mt-0.5">
+                {i + 1}
+              </span>
+              <span className="leading-relaxed">{text}</span>
+            </div>
+          ))}
+        </div>
 
-      <div className="flex flex-wrap gap-3">
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleCopy}
-          loading={loading && !copied}
-          disabled={loading}
-        >
-          {copied ? t('exportCopied') : (loading ? t('exportGenerating') : t('exportCopyBtn'))}
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleDownload}
-          loading={loading}
-          disabled={loading}
-        >
-          {t('exportDownloadBtn')}
-        </Button>
+        {error && (
+          <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+            {error}
+          </p>
+        )}
+
+        {/* Unified copy/download — same content, two delivery options */}
+        <div className="space-y-3">
+          <p className="text-xs text-muted">{t('exportSameContent')}</p>
+          <div className="flex gap-3">
+            <Button
+              onClick={handleCopy}
+              loading={loading && !copied}
+              disabled={loading}
+              fullWidth
+            >
+              {copied ? t('exportCopied') : (loading ? t('exportGenerating') : t('exportCopyBtn'))}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleDownload}
+              loading={loading}
+              disabled={loading}
+              fullWidth
+            >
+              {t('exportDownloadBtn')}
+            </Button>
+          </div>
+        </div>
       </div>
-    </div>
+    </Modal>
   )
 }

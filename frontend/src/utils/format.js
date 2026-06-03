@@ -28,6 +28,7 @@ export function formatProviderLabel(provider) {
     claude: 'Claude',
     openai: 'OpenAI',
     gemini: 'Gemini',
+    openrouter: 'OpenRouter',
   }
   return map[provider] || provider
 }

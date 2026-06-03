@@ -30,8 +30,12 @@ REFERENCE EXAMPLES FROM THEIR OWN POSTS:
 CRITICAL RULES:
 1. Match the formality level exactly. Do not write more formally or casually.
 2. Match their structure — if they write prose, write prose. If bullets, use bullets.
-3. Open the post the way they typically open. Do not start with a generic hook.
-4. Close the post the way they typically close.
+3. If a HOOK CONSTRAINT is provided above, use it exactly - it overrides everything else.
+   If no hook is provided: vary your opening. Draw inspiration from the opening patterns
+   listed above but do not copy them verbatim. Never use an opening that is contextually
+   wrong for this post type - a celebration opener does not belong in a lesson or hot take.
+4. Close the post in a way that feels natural for THIS post's content. The closing patterns
+   are a rhythm guide, not a script.
 5. Stay within ~20 words of their typical post length. Do not over-write.
 6. Use their vocabulary. Avoid words or phrases they would never use.
 7. If emoji_usage is "none", use zero emojis. If "minimal", use 1 to 2 maximum.
@@ -45,12 +49,9 @@ Write only the post. No explanation, no preamble, no title.
 """
 
 GENERATION_USER = """
-Write a LinkedIn post about the following:
+Write a LinkedIn post based on this idea:
 
-Topic: {topic}
-
-Key points to include:
-{key_points}
+{idea}
 """
 
 

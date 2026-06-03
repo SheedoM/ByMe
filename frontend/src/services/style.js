@@ -15,6 +15,7 @@ export const uploadAnalytics    = (file)  => {
   form.append('file', file)
   return api.post('/style/analytics-upload', form)
 }
+export const createStarterProfile = (data) => api.post('/style/starter-profile', data)
 export const getStyleStatus     = () => api.get('/style/status')
 export const analyzeStyle       = () => api.post('/style/analyze')
 export const getStyleProfile    = () => api.get('/style/profile')

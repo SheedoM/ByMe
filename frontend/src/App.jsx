@@ -10,6 +10,7 @@ import Login        from './pages/Login'
 import Signup       from './pages/Signup'
 import Onboarding   from './pages/Onboarding'
 import Generator    from './pages/Generator'
+import History      from './pages/History'
 import StyleProfile from './pages/StyleProfile'
 import Settings     from './pages/Settings'
 
@@ -46,6 +47,9 @@ export default function App() {
           } />
           <Route path="/profile" element={
             <AuthGuard><OnboardingGuard><StyleProfile /></OnboardingGuard></AuthGuard>
+          } />
+          <Route path="/history" element={
+            <AuthGuard><OnboardingGuard><History /></OnboardingGuard></AuthGuard>
           } />
           <Route path="/settings" element={
             <AuthGuard><OnboardingGuard><Settings /></OnboardingGuard></AuthGuard>

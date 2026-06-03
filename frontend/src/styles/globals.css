@@ -61,5 +61,11 @@
     white-space: pre-wrap;
     line-height: 1.75;
     font-size: 0.9375rem;
+    text-align: start;
+    unicode-bidi: plaintext;
+  }
+
+  .post-editor {
+    font-family: inherit;
   }
 }

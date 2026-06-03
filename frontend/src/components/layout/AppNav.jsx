@@ -10,6 +10,7 @@ export default function AppNav() {
   const { t } = useLanguage()
   const navLinks = [
     { to: '/app',     label: t('navGenerate') },
+    { to: '/history', label: t('navHistory') },
     { to: '/profile', label: t('navProfile') },
     { to: '/settings', label: t('navSettings') },
   ]

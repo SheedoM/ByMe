@@ -6,8 +6,8 @@ export const generatePost = ({ topic, key_points, post_type = 'story', selected_
 export const generateHooks = ({ topic, key_points }) =>
   api.post('/generate/hooks', { topic, key_points })
 
-export const submitFeedback = (postId, rating) =>
-  api.post(`/generate/${postId}/feedback`, { rating })
+export const saveFinalPost = (postId, final_output) =>
+  api.put(`/generate/${postId}/final`, { final_output })
 
 export const getHistory = (limit = 20) =>
   api.get(`/generate/history?limit=${limit}`)

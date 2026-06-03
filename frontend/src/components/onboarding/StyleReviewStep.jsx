@@ -49,7 +49,9 @@ export default function StyleReviewStep() {
         {t('reviewTitle')}
       </h1>
       <p className="text-muted text-sm mb-8">
-        {t('reviewCopy', { count: profile.posts_analyzed })}
+        {profile.posts_analyzed > 0
+          ? t('reviewCopy', { count: profile.posts_analyzed })
+          : t('starterReviewCopy')}
       </p>
 
       {/* Voice summary */}

@@ -11,32 +11,46 @@ import { useLanguage } from '../i18n'
 export default function StyleProfile() {
   const { t } = useLanguage()
   const { profile, loading, refresh } = useStyleProfile()
-  const [editing, setEditing] = useState(false)
+  const [editing,      setEditing]      = useState(false)
+  const [exportOpen,   setExportOpen]   = useState(false)
 
   return (
     <div className="min-h-screen bg-paper">
       <AppNav />
 
       <main className="max-w-3xl mx-auto px-6 py-8">
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="font-serif text-3xl font-light text-ink">{t('styleProfileTitle')}</h1>
-            <p className="text-muted text-sm mt-0.5">
-              {t('styleProfileCopy')}
-            </p>
+            <p className="text-muted text-sm mt-0.5">{t('styleProfileCopy')}</p>
           </div>
+
           {profile && (
-            <Button
-              id="btn-toggle-edit"
-              variant="secondary"
-              size="sm"
-              onClick={() => setEditing((e) => !e)}
-            >
-              {editing ? t('cancel') : t('edit')}
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* Export button */}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setExportOpen(true)}
+              >
+                {t('exportTitle')} ↗
+              </Button>
+
+              {/* Edit toggle */}
+              <Button
+                id="btn-toggle-edit"
+                variant="secondary"
+                size="sm"
+                onClick={() => setEditing((e) => !e)}
+              >
+                {editing ? t('cancel') : t('edit')}
+              </Button>
+            </div>
           )}
         </div>
 
+        {/* Body */}
         {loading ? (
           <div className="flex justify-center py-20"><Spinner size="lg" /></div>
         ) : editing ? (
@@ -45,12 +59,15 @@ export default function StyleProfile() {
             onSaved={() => { refresh(); setEditing(false) }}
           />
         ) : (
-          <>
-            <StyleCard profile={profile} />
-            {profile && <ExportStyleProfile />}
-          </>
+          <StyleCard profile={profile} />
         )}
       </main>
+
+      {/* Export modal */}
+      <ExportStyleProfile
+        isOpen={exportOpen}
+        onClose={() => setExportOpen(false)}
+      />
     </div>
   )
 }
