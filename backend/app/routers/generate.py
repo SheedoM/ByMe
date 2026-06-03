@@ -40,8 +40,6 @@ async def generate(
         raise HTTPException(status_code=400, detail="Topic cannot be empty")
 
     points = [p for p in request.key_points if p.strip()]
-    if not points:
-        raise HTTPException(status_code=400, detail="At least one key point is required")
 
     valid_types = {"story", "hot_take", "lesson", "observation", "update"}
     if request.post_type not in valid_types:
@@ -69,8 +67,6 @@ async def generate_hook_variants(
     if not request.topic.strip():
         raise HTTPException(status_code=400, detail="Topic cannot be empty")
     points = [p for p in request.key_points if p.strip()]
-    if not points:
-        raise HTTPException(status_code=400, detail="At least one key point is required")
     try:
         hooks = await generate_hooks(db=db, user_id=user_id, topic=request.topic, key_points=points)
         return {"hooks": hooks}
