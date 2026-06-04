@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from datetime import datetime, timezone
@@ -8,6 +10,7 @@ from ..services.post_generator import generate_post
 from ..services.hook_generator import generate_hooks
 
 router = APIRouter()
+logger = logging.getLogger("byme.generate")
 
 # Cap LLM-backed endpoints: 30 calls / 5 min per user (covers hooks + generate).
 llm_rate_limit = rate_limit(max_calls=30, window_seconds=300)
@@ -75,6 +78,7 @@ async def generate_hook_variants(
         hooks = await generate_hooks(db=db, user_id=user_id, topic=request.topic, key_points=points)
         return {"hooks": hooks}
     except Exception:
+        logger.exception("Hook generation failed")
         raise HTTPException(status_code=502, detail="Could not generate hooks. Please try again.")
 
 

@@ -12,6 +12,48 @@ def _format_list(items: list) -> str:
     return " | ".join(f'"{item}"' for item in items)
 
 
+def _loads_json_fragment(text: str):
+    decoder = json.JSONDecoder()
+    stripped = text.strip()
+
+    try:
+        return json.loads(stripped)
+    except json.JSONDecodeError:
+        pass
+
+    for index, char in enumerate(stripped):
+        if char not in "[{":
+            continue
+        try:
+            value, _ = decoder.raw_decode(stripped[index:])
+            return value
+        except json.JSONDecodeError:
+            continue
+
+    raise ValueError("LLM did not return parseable hook JSON.")
+
+
+def _parse_hooks_response(content: str) -> list[str]:
+    clean = (content or "").strip()
+    if clean.startswith("```"):
+        parts = clean.split("```")
+        clean = parts[1] if len(parts) > 1 else clean
+        if clean.lstrip().startswith("json"):
+            clean = clean.lstrip()[4:]
+
+    data = _loads_json_fragment(clean)
+    hooks = data.get("hooks") if isinstance(data, dict) else data
+
+    if not isinstance(hooks, list) or len(hooks) < 1:
+        raise ValueError("LLM returned invalid hooks format.")
+
+    parsed_hooks = [hook.strip() for hook in hooks if isinstance(hook, str) and hook.strip()]
+    if len(parsed_hooks) != len(hooks):
+        raise ValueError("LLM returned non-string hooks.")
+
+    return parsed_hooks[:3]
+
+
 async def generate_hooks(
     db: Client,
     user_id: str,
@@ -77,16 +119,4 @@ async def generate_hooks(
         temperature=0.9   # higher temp for variety between hooks
     )
 
-    # Parse the JSON array
-    clean = response.content.strip()
-    if clean.startswith("```"):
-        clean = clean.split("```")[1]
-        if clean.startswith("json"):
-            clean = clean[4:]
-
-    hooks = json.loads(clean)
-
-    if not isinstance(hooks, list) or len(hooks) < 1:
-        raise ValueError("LLM returned invalid hooks format.")
-
-    return hooks[:3]  # always cap at 3
+    return _parse_hooks_response(response.content)
