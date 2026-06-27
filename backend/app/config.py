@@ -12,8 +12,24 @@ ENCRYPTION_KEY       = os.getenv("ENCRYPTION_KEY")
 OPENROUTER_API_KEY   = os.getenv("OPENROUTER_API_KEY")
 
 # Free tier LLM model (served via OpenRouter). Must be a real free model id.
-FREE_TIER_MODEL         = os.getenv("FREE_TIER_MODEL", "google/gemini-2.0-flash-exp:free")
+FREE_TIER_MODEL         = os.getenv("FREE_TIER_MODEL", "meta-llama/llama-3.3-70b-instruct:free")
 FREE_TIER_MONTHLY_LIMIT = int(os.getenv("FREE_TIER_MONTHLY_LIMIT", "10"))
+
+# Free OpenRouter models share low upstream rate limits and 429 often. The
+# free-tier provider tries FREE_TIER_MODEL first, then these fallbacks, before
+# giving up. Override via env (comma-separated) as live free models change.
+FREE_TIER_FALLBACK_MODELS = [
+    m.strip()
+    for m in os.getenv(
+        "FREE_TIER_FALLBACK_MODELS",
+        "qwen/qwen3-next-80b-a3b-instruct:free,meta-llama/llama-3.3-70b-instruct:free",
+    ).split(",")
+    if m.strip()
+]
+# How many times to cycle the whole model list, and the cap (seconds) on any
+# single Retry-After backoff between rounds.
+FREE_TIER_MAX_ROUNDS        = int(os.getenv("FREE_TIER_MAX_ROUNDS", "3"))
+FREE_TIER_RETRY_CAP_SECONDS = float(os.getenv("FREE_TIER_RETRY_CAP_SECONDS", "8"))
 
 # Max upload size for LinkedIn archives / analytics files (bytes).
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(15 * 1024 * 1024)))  # 15 MB

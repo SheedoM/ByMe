@@ -1,8 +1,8 @@
-from ..config import OPENROUTER_API_KEY, FREE_TIER_MODEL
 from .base import BaseLLMProvider
 from .claude import ClaudeProvider
 from .openai_provider import OpenAIProvider
 from .gemini import GeminiProvider
+from .free_tier import FreeTierProvider
 
 
 # Valid provider names for BYOK
@@ -35,18 +35,12 @@ VALID_MODELS: dict[str, list[str]] = {
 
 def get_free_tier_provider() -> BaseLLMProvider:
     """
-    Returns an OpenRouter provider using a genuinely free model.
-    The model id is configurable via FREE_TIER_MODEL (defaults to a :free model)
-    so the platform's trial never silently bills a paid model.
+    Returns the OpenRouter free-tier provider. It uses genuinely free (:free)
+    models — FREE_TIER_MODEL first, then FREE_TIER_FALLBACK_MODELS — and handles
+    the shared-capacity 429s these models throw with cross-model fallback and
+    bounded retry, so a transient rate-limit doesn't fail the whole job.
     """
-    if not OPENROUTER_API_KEY:
-        raise RuntimeError("OPENROUTER_API_KEY is not set. Cannot serve free tier users.")
-
-    return OpenAIProvider(
-        api_key=OPENROUTER_API_KEY,
-        model=FREE_TIER_MODEL,
-        base_url="https://openrouter.ai/api/v1"
-    )
+    return FreeTierProvider()
 
 
 def create_provider(
