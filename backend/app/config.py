@@ -10,6 +10,12 @@ SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 SUPABASE_JWT_SECRET  = os.getenv("SUPABASE_JWT_SECRET")
 ENCRYPTION_KEY       = os.getenv("ENCRYPTION_KEY")
 OPENROUTER_API_KEY   = os.getenv("OPENROUTER_API_KEY")
+GOOGLE_API_KEY       = os.getenv("GOOGLE_API_KEY")
+
+# Which provider powers the free tier: "openrouter" (default) or "gemini".
+# Google's AI Studio free tier has far higher limits than OpenRouter's shared
+# :free pool, so "gemini" is the recommended no-cost option.
+FREE_TIER_PROVIDER   = os.getenv("FREE_TIER_PROVIDER", "openrouter").strip().lower()
 
 # Free tier LLM model (served via OpenRouter). Must be a real free model id.
 FREE_TIER_MODEL         = os.getenv("FREE_TIER_MODEL", "meta-llama/llama-3.3-70b-instruct:free")
@@ -52,8 +58,12 @@ def validate_config() -> None:
         "SUPABASE_SERVICE_KEY": SUPABASE_SERVICE_KEY,
         "SUPABASE_JWT_SECRET":  SUPABASE_JWT_SECRET,
         "ENCRYPTION_KEY":       ENCRYPTION_KEY,
-        "OPENROUTER_API_KEY":   OPENROUTER_API_KEY,
     }
+    # Only the selected free-tier provider's key is required.
+    if FREE_TIER_PROVIDER == "gemini":
+        required["GOOGLE_API_KEY"] = GOOGLE_API_KEY
+    else:
+        required["OPENROUTER_API_KEY"] = OPENROUTER_API_KEY
     missing = [name for name, value in required.items() if not value]
     if missing:
         raise RuntimeError(

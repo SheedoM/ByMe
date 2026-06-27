@@ -1,3 +1,4 @@
+from ..config import FREE_TIER_PROVIDER, FREE_TIER_MODEL, GOOGLE_API_KEY
 from .base import BaseLLMProvider
 from .claude import ClaudeProvider
 from .openai_provider import OpenAIProvider
@@ -35,11 +36,20 @@ VALID_MODELS: dict[str, list[str]] = {
 
 def get_free_tier_provider() -> BaseLLMProvider:
     """
-    Returns the OpenRouter free-tier provider. It uses genuinely free (:free)
-    models — FREE_TIER_MODEL first, then FREE_TIER_FALLBACK_MODELS — and handles
-    the shared-capacity 429s these models throw with cross-model fallback and
-    bounded retry, so a transient rate-limit doesn't fail the whole job.
+    Returns the provider that powers the free tier, selected by FREE_TIER_PROVIDER:
+
+    - "gemini": Google AI Studio free tier (much higher limits than OpenRouter's
+      shared :free pool). Uses GOOGLE_API_KEY and FREE_TIER_MODEL (a gemini-* id).
+    - "openrouter" (default): free :free models with cross-model fallback and
+      bounded retry to ride out the shared-capacity 429s.
     """
+    if FREE_TIER_PROVIDER == "gemini":
+        if not GOOGLE_API_KEY:
+            raise RuntimeError("GOOGLE_API_KEY is not set for the Gemini free tier.")
+        # Guard against an OpenRouter slug being left in FREE_TIER_MODEL.
+        model = FREE_TIER_MODEL if "/" not in FREE_TIER_MODEL else "gemini-2.0-flash"
+        return GeminiProvider(api_key=GOOGLE_API_KEY, model=model)
+
     return FreeTierProvider()
 
 
