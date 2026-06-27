@@ -28,7 +28,7 @@ export default function Onboarding() {
       </header>
 
       <main className="flex-1 flex items-center justify-center w-full">
-        <div className="w-full max-w-2xl flex justify-center">
+        <div className="w-full max-w-5xl flex justify-center">
           {step === 'choice' && (
             <OnboardingChoiceStep
               onImport={() => { setManualMode(false); setStep('upload') }}

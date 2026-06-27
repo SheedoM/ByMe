@@ -11,6 +11,7 @@ export default function Signup() {
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
   const [error,    setError]    = useState('')
+  const [message,  setMessage]  = useState('')
   const [loading,  setLoading]  = useState(false)
 
   const handleSubmit = async (e) => {
@@ -21,15 +22,21 @@ export default function Signup() {
     }
     setLoading(true)
     setError('')
+    setMessage('')
 
-    const { error: err } = await signUp(email, password)
+    const { data, error: err } = await signUp(email, password)
 
     if (err) {
       setError(err.message)
       setLoading(false)
+    } else if (data?.user && !data.session) {
+      // Email confirmation required
+      setMessage('Please check your email to verify your account.')
+      setLoading(false)
+    } else {
+      // Success, session created
+      setLoading(false)
     }
-    // On success: PublicRoute in App.jsx watches user state and navigates
-    // to /app when onAuthStateChange fires — no navigate() call needed here.
   }
 
   return (
@@ -67,6 +74,11 @@ export default function Signup() {
           {error && (
             <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
               {error}
+            </p>
+          )}
+          {message && (
+            <p className="text-sm text-green-600 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+              {message}
             </p>
           )}
 
