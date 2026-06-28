@@ -11,11 +11,13 @@ SUPABASE_JWT_SECRET  = os.getenv("SUPABASE_JWT_SECRET")
 ENCRYPTION_KEY       = os.getenv("ENCRYPTION_KEY")
 OPENROUTER_API_KEY   = os.getenv("OPENROUTER_API_KEY")
 GOOGLE_API_KEY       = os.getenv("GOOGLE_API_KEY")
+GROQ_API_KEY         = os.getenv("GROQ_API_KEY")
 
-# Which provider powers the free tier: "openrouter" (default) or "gemini".
-# Google's AI Studio free tier has far higher limits than OpenRouter's shared
-# :free pool, so "gemini" is the recommended no-cost option.
+# Which provider powers the free tier: "openrouter" (default), "gemini", or "groq".
+# Groq's free tier is generous and broadly available by region; Gemini's free
+# tier is region-restricted; OpenRouter's shared :free pool is often saturated.
 FREE_TIER_PROVIDER   = os.getenv("FREE_TIER_PROVIDER", "openrouter").strip().lower()
+GROQ_BASE_URL        = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
 
 # Free tier LLM model (served via OpenRouter). Must be a real free model id.
 FREE_TIER_MODEL         = os.getenv("FREE_TIER_MODEL", "meta-llama/llama-3.3-70b-instruct:free")
@@ -62,6 +64,8 @@ def validate_config() -> None:
     # Only the selected free-tier provider's key is required.
     if FREE_TIER_PROVIDER == "gemini":
         required["GOOGLE_API_KEY"] = GOOGLE_API_KEY
+    elif FREE_TIER_PROVIDER == "groq":
+        required["GROQ_API_KEY"] = GROQ_API_KEY
     else:
         required["OPENROUTER_API_KEY"] = OPENROUTER_API_KEY
     missing = [name for name, value in required.items() if not value]

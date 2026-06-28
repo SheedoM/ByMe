@@ -1,4 +1,10 @@
-from ..config import FREE_TIER_PROVIDER, FREE_TIER_MODEL, GOOGLE_API_KEY
+from ..config import (
+    FREE_TIER_PROVIDER,
+    FREE_TIER_MODEL,
+    GOOGLE_API_KEY,
+    GROQ_API_KEY,
+    GROQ_BASE_URL,
+)
 from .base import BaseLLMProvider
 from .claude import ClaudeProvider
 from .openai_provider import OpenAIProvider
@@ -49,6 +55,16 @@ def get_free_tier_provider() -> BaseLLMProvider:
         # Guard against an OpenRouter slug being left in FREE_TIER_MODEL.
         model = FREE_TIER_MODEL if "/" not in FREE_TIER_MODEL else "gemini-2.0-flash"
         return GeminiProvider(api_key=GOOGLE_API_KEY, model=model)
+
+    if FREE_TIER_PROVIDER == "groq":
+        if not GROQ_API_KEY:
+            raise RuntimeError("GROQ_API_KEY is not set for the Groq free tier.")
+        # Groq is OpenAI-compatible. Guard against a non-Groq slug being left
+        # in FREE_TIER_MODEL (OpenRouter/Gemini ids contain "/" or "gemini").
+        model = FREE_TIER_MODEL
+        if "/" in model or model.startswith("gemini"):
+            model = "llama-3.3-70b-versatile"
+        return OpenAIProvider(api_key=GROQ_API_KEY, model=model, base_url=GROQ_BASE_URL)
 
     return FreeTierProvider()
 
