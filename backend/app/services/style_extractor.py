@@ -1,7 +1,7 @@
 import json
 from typing import List
 from supabase import Client
-from ..config import ENCRYPTION_KEY
+from ..config import ENCRYPTION_KEY, STYLE_ANALYSIS_MAX_INPUT_CHARS
 from ..llm.factory import get_free_tier_provider, create_provider
 from ..prompts.style_extraction import STYLE_EXTRACTION_SYSTEM, STYLE_EXTRACTION_USER
 from ..services.encryption import decrypt_key
@@ -30,13 +30,34 @@ def _select_analysis_provider(db: Client, user_id: str):
     )
 
 
+def _join_posts_within_budget(posts: List[dict], max_chars: int) -> str:
+    """
+    Join post contents (already ordered most-recent-first) up to a character
+    budget, so the analysis request fits under small free-tier per-minute token
+    limits. The first post is always included even if it alone exceeds budget.
+    """
+    separator = "\n\n---\n\n"
+    chunks: List[str] = []
+    total = 0
+    for post in posts:
+        content = (post.get("content") or "").strip()
+        if not content:
+            continue
+        addition = len(content) + (len(separator) if chunks else 0)
+        if chunks and total + addition > max_chars:
+            break
+        chunks.append(content)
+        total += addition
+    return separator.join(chunks)
+
+
 async def extract_style(posts: List[dict], provider=None) -> dict:
     """
     Sends posts to the LLM and returns the parsed style profile dict.
     """
     provider = provider or get_free_tier_provider()
 
-    posts_text = "\n\n---\n\n".join([p['content'] for p in posts])
+    posts_text = _join_posts_within_budget(posts, STYLE_ANALYSIS_MAX_INPUT_CHARS)
     user_prompt = STYLE_EXTRACTION_USER.format(posts=posts_text)
 
     response = await provider.generate(

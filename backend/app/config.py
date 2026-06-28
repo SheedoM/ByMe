@@ -46,6 +46,12 @@ MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(15 * 1024 * 1024)))  # 
 LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
 LLM_MAX_TOKENS      = int(os.getenv("LLM_MAX_TOKENS", "2048"))
 
+# Cap on the post text (chars) sent to style analysis in a single request.
+# Keeps the request under small free-tier per-minute token limits (e.g. Groq's
+# 12K TPM) while still giving plenty of style signal. ~4 chars/token, so 24000
+# chars ≈ 6K tokens of posts. Most-recent posts are kept first.
+STYLE_ANALYSIS_MAX_INPUT_CHARS = int(os.getenv("STYLE_ANALYSIS_MAX_INPUT_CHARS", "24000"))
+
 IS_PRODUCTION = ENVIRONMENT == "production"
 
 
