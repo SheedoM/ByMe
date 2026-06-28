@@ -142,11 +142,14 @@ const translations = {
     apiKeyRequired: 'Please enter your API key.',
     changeAnytime: 'You can change this anytime in Settings.',
 
-    processingFailedTitle: 'Style extraction failed',
-    processingFailedCopy: 'Something went wrong while analysing your posts. Please go back and try uploading again.',
+    processingFailedTitle: 'Style analysis failed',
+    processingFailedCopy: 'Something went wrong analysing your posts. Your posts are saved — you can try again.',
+    processingBusyTitle: 'The AI is busy right now',
+    processingBusyCopy: 'Free AI capacity is maxed out at the moment (common at peak times). Your posts are saved — give it a few seconds and try again.',
+    tryAgain: 'Try again',
     startOver: 'Start over',
     processingTitle: 'Learning your voice',
-    processingTime: 'This takes about 10-20 seconds',
+    processingTimeRange: 'This usually takes 20–40 seconds',
     processingMessages: ['Reading your posts...', 'Studying your tone...', 'Mapping your vocabulary...', 'Identifying your patterns...', 'Building your voice profile...'],
 
     profileReady: 'Style profile ready',
@@ -406,10 +409,13 @@ const translations = {
     changeAnytime: 'يمكنك تغيير ذلك في أي وقت من الإعدادات.',
 
     processingFailedTitle: 'فشل تحليل الأسلوب',
-    processingFailedCopy: 'حدث خطأ أثناء تحليل منشوراتك. يرجى العودة والمحاولة مرة أخرى.',
+    processingFailedCopy: 'حدث خطأ أثناء تحليل منشوراتك. منشوراتك محفوظة — يمكنك المحاولة مرة أخرى.',
+    processingBusyTitle: 'الذكاء الاصطناعي مشغول الآن',
+    processingBusyCopy: 'سعة الذكاء الاصطناعي المجاني ممتلئة حاليًا (شائع في أوقات الذروة). منشوراتك محفوظة — انتظر بضع ثوانٍ وحاول مجددًا.',
+    tryAgain: 'حاول مرة أخرى',
     startOver: 'ابدأ من جديد',
     processingTitle: 'نتعلم صوتك',
-    processingTime: 'يستغرق ذلك حوالي 10-20 ثانية',
+    processingTimeRange: 'يستغرق هذا عادةً 20–40 ثانية',
     processingMessages: ['نقرأ منشوراتك...', 'ندرس نبرتك...', 'نحلل مفرداتك...', 'نحدد أنماطك...', 'نبني ملف أسلوبك...'],
 
     profileReady: 'ملف الأسلوب جاهز',

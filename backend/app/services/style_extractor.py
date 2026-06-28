@@ -5,6 +5,7 @@ from ..config import ENCRYPTION_KEY, STYLE_ANALYSIS_MAX_INPUT_CHARS
 from ..llm.factory import get_free_tier_provider, create_provider
 from ..prompts.style_extraction import STYLE_EXTRACTION_SYSTEM, STYLE_EXTRACTION_USER
 from ..services.encryption import decrypt_key
+from ..services.llm_errors import is_capacity_error
 
 
 def _select_analysis_provider(db: Client, user_id: str):
@@ -117,9 +118,14 @@ async def extract_and_store_style(
         _upsert_style_profile(db, profile_data)
 
     except Exception as e:
-        # Mark the profile as failed so the frontend can show an error
+        # Mark the profile as failed so the frontend can show an error. Stash a
+        # coarse reason ("busy" = transient capacity/rate-limit, "error" = real)
+        # in raw_summary so the frontend can offer the right retry message
+        # without needing a dedicated column. Overwritten on the next success.
+        reason = "busy" if is_capacity_error(e) else "error"
         db.table("style_profiles").upsert({
             "user_id": user_id,
             "status": "failed",
+            "raw_summary": reason,
         }, on_conflict="user_id").execute()
         raise e

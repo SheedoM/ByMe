@@ -178,13 +178,19 @@ async def analyze_posts(
 async def get_status(user_id: str = Depends(get_current_user)):
     db = get_supabase()
     result = db.table("style_profiles") \
-               .select("status") \
+               .select("status, raw_summary") \
                .eq("user_id", user_id) \
                .maybe_single() \
                .execute()
     if not result.data:
         return {"status": "none"}
-    return {"status": result.data["status"]}
+
+    status = result.data["status"]
+    response = {"status": status}
+    if status == "failed":
+        # raw_summary carries a coarse failure reason ("busy" | "error").
+        response["reason"] = result.data.get("raw_summary") or "error"
+    return response
 
 
 @router.get("/profile")

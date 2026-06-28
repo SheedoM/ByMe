@@ -8,9 +8,12 @@ from ..middleware.auth import get_current_user
 from ..middleware.rate_limit import rate_limit
 from ..services.post_generator import generate_post
 from ..services.hook_generator import generate_hooks
+from ..services.llm_errors import is_capacity_error
 
 router = APIRouter()
 logger = logging.getLogger("byme.generate")
+
+BUSY_DETAIL = "Our free AI is busy right now. Please wait a moment and try again."
 
 # Cap LLM-backed endpoints: 30 calls / 5 min per user (covers hooks + generate).
 llm_rate_limit = rate_limit(max_calls=30, window_seconds=300)
@@ -52,14 +55,22 @@ async def generate(
     if request.post_type not in valid_types:
         raise HTTPException(status_code=400, detail=f"post_type must be one of: {valid_types}")
 
-    result = await generate_post(
-        db=db,
-        user_id=user_id,
-        topic=request.topic,
-        key_points=points,
-        post_type=request.post_type,
-        selected_hook=request.selected_hook,
-    )
+    try:
+        result = await generate_post(
+            db=db,
+            user_id=user_id,
+            topic=request.topic,
+            key_points=points,
+            post_type=request.post_type,
+            selected_hook=request.selected_hook,
+        )
+    except HTTPException:
+        raise  # already a clean message (e.g. monthly-limit reached)
+    except Exception as e:
+        if is_capacity_error(e):
+            raise HTTPException(status_code=503, detail=BUSY_DETAIL, headers={"Retry-After": "20"})
+        logger.exception("Post generation failed")
+        raise HTTPException(status_code=502, detail="Could not generate your post. Please try again.")
     return result
 
 
@@ -77,7 +88,9 @@ async def generate_hook_variants(
     try:
         hooks = await generate_hooks(db=db, user_id=user_id, topic=request.topic, key_points=points)
         return {"hooks": hooks}
-    except Exception:
+    except Exception as e:
+        if is_capacity_error(e):
+            raise HTTPException(status_code=503, detail=BUSY_DETAIL, headers={"Retry-After": "20"})
         logger.exception("Hook generation failed")
         raise HTTPException(status_code=502, detail="Could not generate hooks. Please try again.")
 
