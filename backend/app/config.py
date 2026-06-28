@@ -46,11 +46,14 @@ MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(15 * 1024 * 1024)))  # 
 LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
 LLM_MAX_TOKENS      = int(os.getenv("LLM_MAX_TOKENS", "2048"))
 
-# Cap on the post text (chars) sent to style analysis in a single request.
-# Keeps the request under small free-tier per-minute token limits (e.g. Groq's
-# 12K TPM) while still giving plenty of style signal. ~4 chars/token, so 24000
-# chars ≈ 6K tokens of posts. Most-recent posts are kept first.
-STYLE_ANALYSIS_MAX_INPUT_CHARS = int(os.getenv("STYLE_ANALYSIS_MAX_INPUT_CHARS", "24000"))
+# Cap on the post text (chars) sent to style analysis in a single request, to
+# stay under small free-tier per-minute token limits (e.g. Groq's 12K TPM).
+# NOTE: token density is language-dependent — Arabic is ~2.5 chars/token vs ~4
+# for English — so the budget is set conservatively. With the ~700-token prompt
+# and the reserved output (LLM_MAX_TOKENS), 12000 chars of Arabic (~5K tokens)
+# keeps the whole request well under 12K. Most-recent posts are kept first.
+# Raise this via env if your provider has more headroom.
+STYLE_ANALYSIS_MAX_INPUT_CHARS = int(os.getenv("STYLE_ANALYSIS_MAX_INPUT_CHARS", "12000"))
 
 IS_PRODUCTION = ENVIRONMENT == "production"
 
